@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Copiar Textos</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      padding: 20px;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+    }
+    .texto-box {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .texto {
+      flex: 1;
+      margin-right: 10px;
+    }
+    button {
+      padding: 8px 15px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Textos para copiar</h2>
+
+    <div class="texto-box">
+      <div class="texto">Hola, sí, claro. Si querés, te mando catálogo y precios.</div>
+      <button onclick="copiarTexto('Hola, sí, claro. Si querés, te mando catálogo y precios.')">Copiar</button>
+    </div>
+
+    <div class="texto-box">
+      <div class="texto">Estamos en Quilmes Oeste (atras del Jumbo). Envío por correo o Uber, o podes venir a retirar en persona.</div>
+      <button onclick="copiarTexto('Estamos en Quilmes Oeste (atras del Jumbo).Envio por correo o uber, o podes venir a retirar en persona.')">Copiar</button>
+    </div>
+
+    <div class="texto-box">
+      <div class="texto">Para encargar por favor mandar whatsapp al 1126902249</div>
+      <button onclick="copiarTexto('Para encargar por favor mandar whatsapp al 1126902249')">Copiar</button>
+    </div>
+
+    <div class="texto-box">
+      <div class="texto">Para seguir con el pedido me pasas una imagen de lo que queres estampar y te hago una muestra digital hasta que estes conforme y se abona una seña del %50 y luego al terminar se abona el resto. La demora ronda entre 5 y 7 dias.</div>
+      <button onclick="copiarTexto('Para seguir con el pedido me pasas una imagen de lo que queres estampar y te hago una muestra digital hasta que estes conforme y se abona una seña del %50 y luego al terminar se abona el resto. La demora ronda entre 3 y 5 dias.')">Copiar</button>
+    </div>
+
+  </div>
+
+  <script>
+    function copiarTexto(texto) {
+      navigator.clipboard.writeText(texto).then(() => {
+        alert("Texto copiado: " + texto);
+      });
+    }
+  </script>
+</body>
+</html>

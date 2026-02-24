@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Gestor de Bolsas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+</head>
+<body class="bg-slate-100 p-6">
+
+    <div class="flex gap-3 mb-4">
+  <button onclick="filtrarEstado('todos')" 
+    class="bg-slate-200 px-4 py-2 rounded-lg hover:bg-slate-300 transition">
+    Todos
+  </button>
+
+  <button onclick="filtrarEstado('pendiente')" 
+    class="bg-red-100 text-red-700 px-4 py-2 rounded-lg hover:bg-red-200 transition">
+    Solo Pendientes
+  </button>
+
+  <button onclick="filtrarEstado('sena_pagada')" 
+    class="bg-amber-100 text-amber-700 px-4 py-2 rounded-lg hover:bg-amber-200 transition">
+    Seña Pagada
+  </button>
+
+  <button onclick="filtrarEstado('entregado')" 
+    class="bg-green-100 text-green-700 px-4 py-2 rounded-lg hover:bg-green-200 transition">
+    Entregados
+  </button>
+</div>
+
+<div class="flex justify-between items-start mb-6">
+
+  <div>
+    <h1 class="text-3xl font-bold text-slate-800">
+      Gestión de Ventas
+    </h1>
+
+    <div class="mt-2">
+  <a href="/resumen/resumen.html">
+    <button
+      class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow transition"
+    >
+      Presupuesto
+    </button>
+  </a>
+</div>
+
+<div class="mt-2">
+  <a href="/resumen/copys.html">
+    <button
+      class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow transition"
+    >
+      Copys
+    </button>
+  </a>
+</div>
+
+  </div>
+
+
+  <div class="text-sm font-semibold flex gap-6 mt-2">
+
+    <span class="text-red-600">
+      Pendientes: <span id="count-pendiente">0</span>
+    </span>
+
+    <span class="text-amber-600">
+      Seña: <span id="count-sena">0</span>
+    </span>
+
+    <span class="text-green-600">
+      Entregados: <span id="count-entregado">0</span>
+    </span>
+
+  </div>
+
+</div>
+
+<div class="flex justify-end mb-6">
+  <div class="bg-white p-4 rounded-xl shadow w-[450px]">
+    
+    <div class="flex justify-between items-center mb-3">
+      <span class="font-semibold text-slate-700">Resumen</span>
+
+      <select id="filtro-mes" 
+        class="border border-slate-300 rounded-lg px-2 py-1 text-sm">
+      </select>
+    </div>
+
+    <div class="grid grid-cols-3 gap-3 text-sm">
+
+      <div class="bg-slate-100 p-3 rounded-lg">
+        <div class="text-slate-500">Bruta</div>
+        <div id="total-bruta" class="font-bold">$0</div>
+      </div>
+
+      <div class="bg-amber-100 p-3 rounded-lg">
+        <div class="text-amber-700">Taller</div>
+        <div id="total-taller" class="font-bold">$0</div>
+      </div>
+
+      <div class="bg-green-100 p-3 rounded-lg">
+        <div class="text-green-700">Neta</div>
+        <div id="total-neta" class="font-bold">$0</div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+</div>
+
+<div class="bg-white p-6 rounded-2xl shadow mb-8">
+  <h2 class="text-xl font-semibold mb-4 text-slate-700">Nueva Venta</h2>
+
+  <form id="form-venta" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+
+    <input type="date" id="fecha" required class="border border-slate-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500">
+
+    <div class="flex gap-2 items-center">
+  
+        <div class="relative w-72">
+
+  <button type="button"
+    onclick="toggleClienteDropdown()"
+    id="cliente-boton"
+    class="w-full border border-slate-300 rounded-lg px-3 py-2 text-left bg-white">
+    Seleccionar cliente
+  </button>
+
+  <div id="cliente-dropdown"
+    class="hidden absolute z-50 w-full bg-white border border-slate-300 rounded-lg mt-1 shadow-lg max-h-80 overflow-y-auto">
+
+    <div class="p-2">
+      <input 
+        type="text"
+        id="buscar-cliente"
+        placeholder="Buscar cliente..."
+        class="w-full border border-slate-300 rounded px-2 py-1 text-sm"
+        oninput="filtrarClientes()"
+      >
+    </div>
+
+    <div id="lista-clientes"></div>
+
+  </div>
+
+</div>
+
+  <button 
+    type="button"
+    onclick="abrirModalCliente()"
+    class="bg-indigo-600 text-white px-3 py-2 rounded-lg hover:bg-indigo-700 transition text-sm"
+  >
+    + Cliente
+  </button>
+</div>
+    <select id="producto" required class="border border-slate-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+    <select id="cantidad" required class="border border-slate-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
+
+    <input type="text" id="color_bolsa" placeholder="Color bolsa" class="border border-slate-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500">
+    <input type="text" id="color_estampa" placeholder="Color estampa" class="border border-slate-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500">
+
+    <label class="flex items-center gap-2">
+      <input type="checkbox" id="doble_estampa">
+      Doble
+    </label>
+
+    <label class="flex items-center gap-2">
+      <input type="checkbox" id="envio_domicilio">
+      Envío
+    </label>
+
+    <input type="number" id="precio_final" readonly placeholder="Precio final" class="input bg-slate-100">
+
+    <input type="date" id="fecha_entrega" class="border border-slate-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500">
+
+    
+    <button type="submit"
+      class="col-span-2 md:col-span-4 bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-xl transition">
+      Crear Venta
+    </button>
+  </form>
+</div>
+
+<div class="flex justify-between items-center mb-4">
+
+  <input 
+    type="text" 
+    id="buscador"
+    placeholder="Buscar cliente, archivo, whatsapp..."
+    class="border border-slate-300 rounded-lg px-4 py-2 w-80 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+  >
+
+</div>
+
+<div class="bg-white rounded-2xl shadow overflow-hidden">
+
+  <div class="overflow-x-auto">
+    <table class="min-w-full text-sm text-left">
+      <thead class="bg-slate-800 text-white sticky top-0 z-10">
+        <tr>
+          <th class="px-3 py-2">Fecha</th>
+          <th class="px-3 py-2">Cliente</th>
+          <th class="px-3 py-2">WSP</th>
+          <th class="px-3 py-2">Archivo</th>
+          <th class="px-3 py-2">Producto</th>
+          <th class="px-3 py-2">Pack</th>
+          <th class="px-3 py-2">Bolsa</th>
+          <th class="px-3 py-2">Estampa</th>
+          <th class="px-3 py-2">Doble</th>
+          <th class="px-3 py-2">Envío</th>
+          <th class="px-3 py-2">Precio</th>
+          <th class="px-3 py-2">Seña</th>
+          <th class="px-3 py-2">Restante</th>
+          <th class="px-3 py-2">Entrega</th>
+          <th class="px-3 py-2">Costo</th>
+          <th class="px-3 py-2">Ganancia</th>
+          <th class="px-3 py-2">Taller</th>
+          <th class="px-3 py-2">Neta</th>
+          <th class="px-3 py-2">ARCA</th>
+          <th class="px-3 py-2">Estado</th>
+          <th class="px-3 py-2">Historial</th>
+          <th class="px-3 py-2">Acción</th>
+          
+        </tr>
+      </thead>
+      <tbody id="tabla-ventas" class="divide-y divide-slate-200"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", async () => {
+
+
+let ventasGlobal = [];
+  let packsGlobal = [];
+
+  window.formatearFecha = function(fechaISO) {
+  if (!fechaISO) return "";
+  const fecha = new Date(fechaISO);
+  return `${fecha.getDate()}/${fecha.getMonth()+1}/${fecha.getFullYear().toString().slice(-2)}`;
+};
+
+  window.formatearPesos = function(valor) {
+  return new Intl.NumberFormat("es-AR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(valor);
+};
+
+  async function cargarClientes() {
+
+  const res = await fetch("/clientes");
+  clientesGlobal = await res.json();
+
+  const rankingRes = await fetch("/clientes-ranking");
+  const topClientes = await rankingRes.json();
+
+  const lista = document.getElementById("lista-clientes");
+  lista.innerHTML = "";
+
+  // TOP 10 primero
+  topClientes.forEach(c => agregarClienteALista(c));
+
+  const separador = document.createElement("div");
+  separador.className = "border-t my-2";
+  lista.appendChild(separador);
+
+  // RESTO
+  clientesGlobal.forEach(c => {
+    if (!topClientes.find(t => t.id === c.id)) {
+      agregarClienteALista(c);
+    }
+  });
+}
+
+function agregarClienteALista(cliente) {
+
+  const div = document.createElement("div");
+  div.className = "px-3 py-2 hover:bg-slate-100 cursor-pointer text-sm";
+
+  div.innerText = `${cliente.nombre} (${cliente.archivo_codigo})`;
+
+  div.onclick = function() {
+    clienteSeleccionadoId = cliente.id;
+    document.getElementById("cliente-boton").innerText = cliente.nombre;
+    document.getElementById("cliente-dropdown").classList.add("hidden");
+  };
+
+  document.getElementById("lista-clientes").appendChild(div);
+}
+
+window.filtrarClientes = function() {
+
+  const texto = document.getElementById("buscar-cliente").value.toLowerCase();
+  const lista = document.getElementById("lista-clientes");
+
+  lista.innerHTML = "";
+
+  clientesGlobal
+    .filter(c =>
+      c.nombre.toLowerCase().includes(texto) ||
+      c.whatsapp.toLowerCase().includes(texto) ||
+      c.archivo_codigo.toLowerCase().includes(texto)
+    )
+    .forEach(c => agregarClienteALista(c));
+};
+
+  async function cargarProductos() {
+    const res = await fetch("/productos");
+    const productos = await res.json();
+    const select = document.getElementById("producto");
+    select.innerHTML = "";
+    productos.forEach(p => {
+      const option = document.createElement("option");
+      option.value = p.id;
+      option.textContent = `${p.tamano} ${p.tipo_asa}`;
+      select.appendChild(option);
+    });
+
+    if (select.value) {
+      await cargarPacks(select.value);
+    }
+  }
+
+  async function cargarPacks(productoId) {
+    const res = await fetch(`/precios-pack/${productoId}`);
+    const packs = await res.json();
+    packsGlobal = packs;
+    const select = document.getElementById("cantidad");
+    select.innerHTML = "";
+    packs.forEach(p => {
+      const option = document.createElement("option");
+      option.value = p.cantidad;
+      option.textContent = p.cantidad;
+      select.appendChild(option);
+    });
+    calcularPrecioPack();
+  }
+
+  function calcularPrecioPack() {
+  const cantidad = parseInt(document.getElementById("cantidad").value);
+  const pack = packsGlobal.find(p => p.cantidad === cantidad);
+  if (!pack) return;
+
+  let precio = pack.precio_total;
+
+  const doble = document.getElementById("doble_estampa").checked;
+
+  if (doble) {
+    precio = precio * 1.5; // suma 50%
+  }
+
+  document.getElementById("precio_final").value = precio;
+}
+
+  async function cargarVentas() {
+    const res = await fetch("/ventas");
+    const ventas = await res.json();
+    ventasGlobal = ventas;
+cargarFiltroMeses();
+calcularTotales();
+actualizarContadores();
+    const tabla = document.getElementById("tabla-ventas");
+    tabla.innerHTML = "";
+
+    ventas.forEach(v => {
+      const fila = document.createElement("tr");
+      let colorEstado = "";
+
+if (v.estado === "pendiente") {
+  colorEstado = "bg-red-50";
+} else if (v.estado === "sena_pagada") {
+  colorEstado = "bg-amber-50";
+} else if (v.estado === "en_produccion") {
+  colorEstado = "bg-blue-50";
+} else if (v.estado === "entregado") {
+  colorEstado = "bg-green-50";
+}
+
+fila.className = colorEstado;
+
+      fila.innerHTML = `
+        <td>${formatearFecha(v.fecha)}</td>
+        <td>${v.nombre}</td>
+        <td>${v.whatsapp}</td>
+        <td>${v.archivo_codigo}</td>
+        <td>${v.tamano} ${v.tipo_asa}</td>
+        <td>${v.cantidad}</td>
+        <td>${v.color_bolsa}</td>
+        <td>${v.color_estampa}</td>
+        <td>${v.doble_estampa ? "SI" : "NO"}</td>
+        <td>${v.envio_domicilio ? "SI" : "NO"}</td>
+        <td>$${formatearPesos(v.precio_final)}</td>
+        <td>$${formatearPesos(v.sena)}</td>
+        <td>$${formatearPesos(v.restante)}</td>
+        <td>${formatearFecha(v.fecha_entrega)}</td>
+        <td>$${formatearPesos(v.costo_total)}</td>
+        <td>$${formatearPesos(v.ganancia_total)}</td>
+        <td>$${formatearPesos(v.ganancia_taller)}</td>
+        <td>$${formatearPesos(v.ganancia_personal)}</td>
+        <td><input type="checkbox" ${v.factura ? "checked" : ""}></td>
+        <td>
+  <span class="
+    px-2 py-1 rounded-full text-xs font-semibold
+    ${v.estado === "pendiente" ? "bg-red-100 text-red-700" : ""}
+    ${v.estado === "sena_pagada" ? "bg-amber-100 text-amber-700" : ""}
+    ${v.estado === "en_produccion" ? "bg-blue-100 text-blue-700" : ""}
+    ${v.estado === "entregado" ? "bg-green-100 text-green-700" : ""}
+  ">
+    ${v.estado.replace("_", " ")}
+  </span>
+</td>
+
+<td>
+  <button onclick="verHistorial(${v.cliente_id})"
+    class="bg-indigo-500 text-white px-2 py-1 rounded text-xs hover:bg-indigo-600 transition">
+    Ver
+  </button>
+</td>
+
+        <td>
+          ${v.estado !== "entregado"
+  ? `<button onclick="marcarEntregado(${v.id})"
+      class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg transition">
+      Entregar
+     </button>`
+  : `<button onclick="revertirEntrega(${v.id})"
+      class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded-lg transition">
+      Deshacer
+     </button>`}
+        </td>
+      `;
+
+      tabla.appendChild(fila);
+    });
+  }
+
+function cargarFiltroMeses() {
+  const select = document.getElementById("filtro-mes");
+  select.innerHTML = '<option value="todos">Todos los meses</option>';
+
+  const meses = new Set();
+
+  ventasGlobal.forEach(v => {
+    const fecha = new Date(v.fecha);
+    const clave = `${fecha.getFullYear()}-${fecha.getMonth()}`;
+    meses.add(clave);
+  });
+
+  meses.forEach(m => {
+    const [year, month] = m.split("-");
+    const nombreMes = new Date(year, month).toLocaleString("es-AR", { month: "long" });
+    const option = document.createElement("option");
+    option.value = m;
+    option.textContent = `${nombreMes} ${year}`;
+    select.appendChild(option);
+  });
+}
+
+function calcularTotales() {
+
+  const filtro = document.getElementById("filtro-mes").value;
+
+  let filtradas = ventasGlobal;
+
+  if (filtro !== "todos") {
+    filtradas = ventasGlobal.filter(v => {
+      const fecha = new Date(v.fecha);
+      const clave = `${fecha.getFullYear()}-${fecha.getMonth()}`;
+      return clave === filtro;
+    });
+  }
+
+  const totalBruta = filtradas.reduce((acc, v) => acc + Number(v.ganancia_total), 0);
+  const totalTaller = filtradas.reduce((acc, v) => acc + Number(v.ganancia_taller), 0);
+  const totalNeta = filtradas.reduce((acc, v) => acc + Number(v.ganancia_personal), 0);
+
+  document.getElementById("total-bruta").innerText = "$" + formatearPesos(totalBruta);
+  document.getElementById("total-taller").innerText = "$" + formatearPesos(totalTaller);
+  document.getElementById("total-neta").innerText = "$" + formatearPesos(totalNeta);
+}
+
+function actualizarContadores() {
+
+  const pendientes = ventasGlobal.filter(v => v.estado === "pendiente").length;
+  const sena = ventasGlobal.filter(v => v.estado === "sena_pagada").length;
+  const entregados = ventasGlobal.filter(v => v.estado === "entregado").length;
+
+  document.getElementById("count-pendiente").innerText = pendientes;
+  document.getElementById("count-sena").innerText = sena;
+  document.getElementById("count-entregado").innerText = entregados;
+}
+
+document.getElementById("filtro-mes").addEventListener("change", calcularTotales);
+
+  document.getElementById("producto").addEventListener("change", (e) => {
+    cargarPacks(e.target.value);
+  });
+
+  document.getElementById("cantidad").addEventListener("change", calcularPrecioPack);
+document.getElementById("doble_estampa").addEventListener("change", calcularPrecioPack);
+  document.getElementById("form-venta").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const nuevaVenta = {
+      fecha: document.getElementById("fecha").value,
+      cliente_id: clienteSeleccionadoId,
+      producto_id: parseInt(document.getElementById("producto").value),
+      cantidad: parseInt(document.getElementById("cantidad").value),
+      color_bolsa: document.getElementById("color_bolsa").value,
+      color_estampa: document.getElementById("color_estampa").value,
+      doble_estampa: document.getElementById("doble_estampa").checked,
+      envio_domicilio: document.getElementById("envio_domicilio").checked,
+      fecha_entrega: document.getElementById("fecha_entrega").value,
+      factura: false
+    };
+
+    await fetch("/ventas", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(nuevaVenta)
+    });
+
+    e.target.reset();
+    await cargarProductos();
+    cargarVentas();
+  });
+  
+// =============================
+// FUNCIONES DE BOTONES
+// =============================
+
+window.marcarEntregado = async function(id) {
+  await fetch(`/ventas/${id}/pagar-restante`, {
+    method: "PUT"
+  });
+  cargarVentas();
+};
+
+window.revertirEntrega = async function(id) {
+  await fetch(`/ventas/${id}/revertir-entrega`, {
+    method: "PUT"
+  });
+  cargarVentas();
+};
+
+  await cargarClientes();
+  await cargarProductos();
+  cargarVentas();
+
+});
+
+window.filtrarEstado = function(estado) {
+  const filas = document.querySelectorAll("#tabla-ventas tr");
+
+  filas.forEach(fila => {
+    if (estado === "todos") {
+      fila.style.display = "";
+    } else {
+      if (fila.innerHTML.includes(estado.replace("_", " "))) {
+        fila.style.display = "";
+      } else {
+        fila.style.display = "none";
+      }
+    }
+  });
+};
+
+document.getElementById("buscador").addEventListener("input", function () {
+  const texto = this.value.toLowerCase();
+
+  const filas = document.querySelectorAll("#tabla-ventas tr");
+
+  filas.forEach(fila => {
+    const contenido = fila.innerText.toLowerCase();
+
+    if (contenido.includes(texto)) {
+      fila.style.display = "";
+    } else {
+      fila.style.display = "none";
+    }
+  });
+});
+
+async function crearCliente() {
+
+  const nombre = document.getElementById("nuevo-nombre").value;
+  const whatsapp = document.getElementById("nuevo-whatsapp").value;
+
+  if (!nombre || !whatsapp) {
+    alert("Completar nombre y whatsapp");
+    return;
+  }
+
+  const res = await fetch("/clientes", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      nombre,
+      whatsapp
+    })
+  });
+
+  if (res.ok) {
+    document.getElementById("nuevo-nombre").value = "";
+    document.getElementById("nuevo-whatsapp").value = "";
+    cargarClientes();
+  } else {
+    alert("Error al crear cliente");
+  }
+}
+
+window.verHistorial = async function(cliente_id) {
+
+  const resVentas = await fetch(`/clientes/${cliente_id}/ventas`);
+  const ventas = await resVentas.json();
+
+  const resCliente = await fetch(`/clientes`);
+  const clientes = await resCliente.json();
+
+  const cliente = clientes.find(c => c.id === cliente_id);
+
+  if (!cliente) return;
+
+  
+    const cantidadPedidos = ventas.length;
+  const totalGastado = ventas.reduce((acc, v) => acc + Number(v.precio_final), 0);
+  const totalGanancia = ventas.reduce((acc, v) => acc + Number(v.ganancia_personal), 0);
+const promedioPedido = cantidadPedidos > 0
+  ? totalGastado / cantidadPedidos
+  : 0;
+
+  const conteoProductos = {};
+
+ventas.forEach(v => {
+  if (!conteoProductos[v.tamano]) {
+    conteoProductos[v.tamano] = 0;
+  }
+  conteoProductos[v.tamano] += v.cantidad;
+});
+
+let productoMasComprado = "-";
+let max = 0;
+
+for (let producto in conteoProductos) {
+  if (conteoProductos[producto] > max) {
+    max = conteoProductos[producto];
+    productoMasComprado = producto;
+  }
+}
+
+  const ultimoPedido = ventas.length > 0 
+    ? formatearFecha(ventas[0].fecha)
+    : "Sin pedidos";
+
+  let tabla = `
+    <table class="w-full text-sm mt-4 border">
+      <thead class="bg-slate-100">
+        <tr>
+          <th class="p-2">Fecha</th>
+          
+          <th class="p-2">Tamaño</th>
+        <th class="p-2">Bolsa</th>
+        <th class="p-2">Estampa</th>
+        <th class="p-2">Pack</th>
+          <th class="p-2">Total</th>
+          <th class="p-2">Ganancia</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  ventas.forEach(v => {
+    tabla += `
+      <tr class="border-t">
+        <td class="p-2">${formatearFecha(v.fecha)}</td>
+        <td class="p-2">${v.tamano}</td>
+<td class="p-2">${v.color_bolsa}</td>
+<td class="p-2">${v.color_estampa}</td>
+<td class="p-2">${v.cantidad}</td>
+        <td class="p-2">$${formatearPesos(v.precio_final)}</td>
+        <td class="p-2">$${formatearPesos(v.ganancia_personal)}</td>
+      </tr>
+    `;
+  });
+
+  tabla += "</tbody></table>";
+
+  document.getElementById("contenido-historial").innerHTML = `
+    <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+
+      <div><strong>Nombre:</strong> ${cliente.nombre}</div>
+      <div><strong>Whatsapp:</strong> ${cliente.whatsapp}</div>
+
+      <div><strong>Código:</strong> ${cliente.archivo_codigo}</div>
+      <div><strong>Pedidos:</strong> ${cantidadPedidos}</div>
+
+      <div><strong>Dirección:</strong> ${cliente.direccion || "-"}</div>
+      <div><strong>Localidad:</strong> ${cliente.localidad || "-"}</div>
+
+      <div><strong>Total gastado:</strong> $${formatearPesos(totalGastado)}</div>
+      <div><strong>Ganancia generada:</strong> $${formatearPesos(totalGanancia)}</div>
+        <div><strong>Promedio por pedido:</strong> $${formatearPesos(promedioPedido)}</div>
+        <div><strong>Producto más comprado:</strong> ${productoMasComprado}</div>
+      <div><strong>Último pedido:</strong> ${ultimoPedido}</div>
+
+    </div>
+
+    ${tabla}
+  `;
+
+  abrirModalHistorial();
+};
+
+window.abrirModalCliente = function() {
+  document.getElementById("modal-cliente").classList.remove("hidden");
+  document.getElementById("modal-cliente").classList.add("flex");
+};
+
+window.cerrarModalCliente = function() {
+  document.getElementById("modal-cliente").classList.add("hidden");
+};
+
+window.guardarClienteModal = async function() {
+
+  const nombre = document.getElementById("modal-nombre").value;
+  const whatsapp = document.getElementById("modal-whatsapp").value;
+  const direccion = document.getElementById("modal-direccion").value;
+  const localidad = document.getElementById("modal-localidad").value;
+
+  if (!nombre || !whatsapp) {
+    alert("Nombre y Whatsapp son obligatorios");
+    return;
+  }
+
+  const res = await fetch("/clientes", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      nombre,
+      whatsapp,
+      direccion,
+      localidad
+    })
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    alert(data.error || "Error al crear cliente");
+    return;
+  }
+
+  cerrarModalCliente();
+  await cargarClientes();
+
+  document.getElementById("modal-nombre").value = "";
+  document.getElementById("modal-whatsapp").value = "";
+  document.getElementById("modal-direccion").value = "";
+  document.getElementById("modal-localidad").value = "";
+
+};
+
+window.cerrarModalHistorial = function() {
+  document.getElementById("modal-historial").classList.add("hidden");
+};
+
+function abrirModalHistorial() {
+  document.getElementById("modal-historial").classList.remove("hidden");
+  document.getElementById("modal-historial").classList.add("flex");
+}
+
+let clientesGlobal = [];
+let clienteSeleccionadoId = null;
+
+window.toggleClienteDropdown = function() {
+  document.getElementById("cliente-dropdown").classList.toggle("hidden");
+};
+
+</script>
+<div id="modal-cliente" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50">
+
+  <div class="bg-white rounded-xl shadow-xl w-[500px] p-6 relative">
+
+    <h2 class="text-xl font-semibold mb-4">Registrar Cliente</h2>
+
+    <div class="grid gap-3">
+
+      <input type="text" id="modal-nombre"
+        placeholder="Nombre"
+        class="border border-slate-300 rounded-lg px-3 py-2">
+
+      <input type="text" id="modal-whatsapp"
+        placeholder="Whatsapp"
+        class="border border-slate-300 rounded-lg px-3 py-2">
+
+      <input type="text" id="modal-direccion"
+        placeholder="Dirección"
+        class="border border-slate-300 rounded-lg px-3 py-2">
+
+      <input type="text" id="modal-localidad"
+        placeholder="Localidad"
+        class="border border-slate-300 rounded-lg px-3 py-2">
+
+      <button onclick="guardarClienteModal()"
+        class="bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition">
+        Guardar Cliente
+      </button>
+
+    </div>
+
+    <button onclick="cerrarModalCliente()"
+      class="absolute top-3 right-3 text-slate-500 hover:text-black">
+      ✕
+    </button>
+
+  </div>
+</div>
+
+<div id="modal-historial" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50">
+
+  <div class="bg-white rounded-xl shadow-xl w-[900px] max-h-[90vh] overflow-y-auto p-6 relative">
+
+    <h2 class="text-xl font-semibold mb-4">Ficha del Cliente</h2>
+
+    <div id="contenido-historial"></div>
+
+    <button onclick="cerrarModalHistorial()"
+      class="absolute top-3 right-3 text-slate-500 hover:text-black">
+      ✕
+    </button>
+
+  </div>
+</div>
+
+</body>
+</html>
