@@ -56,7 +56,13 @@
     </button>
   </a>
 </div>
-
+<div class="mt-2">
+<button 
+  onclick="abrirModalConfig()" 
+  class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow transition">
+  Config
+</button>
+</div>
   </div>
 
 
@@ -785,6 +791,117 @@ window.toggleClienteDropdown = function() {
   document.getElementById("cliente-dropdown").classList.toggle("hidden");
 };
 
+function abrirModalConfig() {
+  document.getElementById("modalConfig").classList.remove("hidden");
+  document.getElementById("modalConfig").classList.add("flex");
+  cargarConfigProductos();
+}
+
+function cerrarModalConfig() {
+  document.getElementById("modalConfig").classList.add("hidden");
+}
+
+async function cargarConfigProductos() {
+  const res = await fetch("/productos");
+  const productos = await res.json();
+
+  const select = document.getElementById("configProducto");
+  select.innerHTML = "";
+
+  productos.forEach(p => {
+    const option = document.createElement("option");
+    option.value = p.id;
+    option.textContent = p.tamano + " " + p.tipo_asa;
+    select.appendChild(option);
+  });
+
+  cargarDatosProducto();
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+
+  const selectProducto = document.getElementById("configProducto");
+  if (selectProducto) {
+    selectProducto.addEventListener("change", cargarDatosProducto);
+  }
+
+  const selectPack = document.getElementById("configPack");
+  if (selectPack) {
+    selectPack.addEventListener("change", cargarPrecioPack);
+  }
+
+});
+
+  async function cargarDatosProducto() {
+
+  const productoId = document.getElementById("configProducto").value;
+
+  const resProd = await fetch("/productos");
+  const productos = await resProd.json();
+
+  const producto = productos.find(p => p.id == productoId);
+
+  document.getElementById("configCostoUnitario").value =
+    producto.costo_unitario;
+
+  const resPack = await fetch(`/precios-pack/${productoId}`);
+  const packs = await resPack.json();
+
+  const selectPack = document.getElementById("configPack");
+  selectPack.innerHTML = "";
+
+  packs.forEach(p => {
+    const option = document.createElement("option");
+    option.value = p.cantidad;
+    option.textContent = p.cantidad;
+    selectPack.appendChild(option);
+  });
+
+  cargarPrecioPack();
+}
+
+
+
+  async function cargarPrecioPack() {
+
+  const productoId = document.getElementById("configProducto").value;
+  const pack = document.getElementById("configPack").value;
+
+  const res = await fetch(`/precios-pack/${productoId}`);
+  const packs = await res.json();
+
+  const seleccionado = packs.find(p => p.cantidad == pack);
+
+  document.getElementById("configPrecioPack").value =
+    seleccionado.precio_total;
+}
+
+async function guardarConfig() {
+
+  const productoId = document.getElementById("configProducto").value;
+  const costoUnitario = document.getElementById("configCostoUnitario").value;
+  const pack = document.getElementById("configPack").value;
+  const precioFinal = document.getElementById("configPrecioPack").value;
+
+  await fetch("/config/guardar", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      producto_id: productoId,
+      costo_unitario: costoUnitario,
+      cantidad: pack,
+      precio_total: precioFinal
+    })
+  });
+
+  alert("Configuración actualizada correctamente");
+
+  cerrarModalConfig();
+
+  // recargar ventas automáticamente
+  await cargarVentas();
+}
+
 </script>
 <div id="modal-cliente" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50">
 
@@ -837,6 +954,93 @@ window.toggleClienteDropdown = function() {
       class="absolute top-3 right-3 text-slate-500 hover:text-black">
       ✕
     </button>
+
+  </div>
+</div>
+
+<div id="modalConfig" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center">
+
+  <div class="bg-white w-[600px] rounded-lg shadow-lg p-6">
+
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold">Configuración</h2>
+      <button onclick="cerrarModalConfig()">✕</button>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+
+      <div>
+        <label>Tamaño</label>
+        <select id="configProducto" class="w-full border rounded px-2 py-1"></select>
+      </div>
+
+      <div>
+        <label>Costo unitario</label>
+        <input type="number" id="configCostoUnitario" class="w-full border rounded px-2 py-1">
+      </div>
+
+      <div>
+        <label>Pack</label>
+        <select id="configPack" class="w-full border rounded px-2 py-1"></select>
+      </div>
+
+      <div>
+        <label>Precio final pack</label>
+        <input type="number" id="configPrecioPack" class="w-full border rounded px-2 py-1">
+      </div>
+
+    </div>
+
+    <div class="mt-6 text-right">
+      <button onclick="guardarConfig()" 
+        class="bg-green-600 text-white px-4 py-2 rounded">
+        Guardar
+      </button>
+    </div>
+
+  </div>
+
+</div>
+
+<div id="modalConfig" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center">
+
+  <div class="bg-white w-[700px] rounded-xl shadow-xl p-6">
+
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold">Configuración de Precios</h2>
+      <button onclick="cerrarModalConfig()">✕</button>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+
+      <div>
+        <label class="text-sm font-semibold">Tamaño</label>
+        <select id="configProducto" class="w-full border rounded px-2 py-1"></select>
+      </div>
+
+      <div>
+        <label class="text-sm font-semibold">Costo unitario</label>
+        <input type="number" id="configCostoUnitario" class="w-full border rounded px-2 py-1">
+      </div>
+
+      <div>
+        <label class="text-sm font-semibold">Pack</label>
+        <select id="configPack" class="w-full border rounded px-2 py-1"></select>
+      </div>
+
+      <div>
+        <label class="text-sm font-semibold">Precio final pack</label>
+        <input type="number" id="configPrecioPack" class="w-full border rounded px-2 py-1">
+      </div>
+
+    </div>
+
+    <div class="mt-6 text-right">
+      <button onclick="guardarConfig()" 
+        class="bg-green-600 text-white px-4 py-2 rounded">
+        Guardar Cambios
+      </button>
+    </div>
 
   </div>
 </div>

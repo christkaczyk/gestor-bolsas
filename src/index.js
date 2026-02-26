@@ -567,3 +567,49 @@ app.get("/clientes-ranking", async (req, res) => {
     res.status(500).json({ error: "Error al obtener ranking" });
   }
 });
+
+app.get("/productos", async (req, res) => {
+  const result = await pool.query(`
+    SELECT id, tamano, tipo_asa, costo_unitario
+    FROM productos
+    WHERE activo = true
+    ORDER BY tamano
+  `);
+  res.json(result.rows);
+});
+
+app.get("/precios-pack/:id", async (req, res) => {
+  const productoId = req.params.id;
+
+  const result = await pool.query(`
+    SELECT cantidad, precio_total
+    FROM precios_pack
+    WHERE producto_id = $1
+    ORDER BY cantidad
+  `, [productoId]);
+
+  res.json(result.rows);
+});
+
+app.put("/config/guardar", async (req, res) => {
+
+  const { producto_id, costo_unitario, cantidad, precio_total } = req.body;
+
+  // Actualizar costo unitario
+  await pool.query(`
+    UPDATE productos
+    SET costo_unitario = $1
+    WHERE id = $2
+  `, [costo_unitario, producto_id]);
+
+  // Actualizar precio pack
+  await pool.query(`
+    UPDATE precios_pack
+    SET precio_total = $1,
+        updated_at = NOW()
+    WHERE producto_id = $2
+    AND cantidad = $3
+  `, [precio_total, producto_id, cantidad]);
+
+  res.json({ ok: true });
+});
