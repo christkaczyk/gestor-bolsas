@@ -48,13 +48,9 @@
 </div>
 
 <div class="mt-2">
-  <a href="/resumen/copys.html">
-    <button
-      class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow transition"
-    >
-      Copys
-    </button>
-  </a>
+  <button onclick="abrirModalCopys()" class="bg-green-600 text-white px-4 py-2 rounded">
+  Copys
+</button>
 </div>
 <div class="mt-2">
 <button 
@@ -902,6 +898,163 @@ async function guardarConfig() {
   await cargarVentas();
 }
 
+function abrirModalCopys() {
+  const modal = document.getElementById("modalCopys");
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+  cargarCopysGuardados();
+}
+
+function cerrarModalCopys() {
+  const modal = document.getElementById("modalCopys");
+  modal.classList.add("hidden");
+  modal.classList.remove("flex"); // ← lo saca del centro
+}
+
+function copiarTexto(btn) {
+
+  const container = btn.closest("[data-id]");
+  const texto = container.querySelector(".copy-text").innerText;
+
+  navigator.clipboard.writeText(texto).then(() => {
+    btn.innerText = "Copiado!";
+    btn.classList.remove("bg-blue-500");
+    btn.classList.add("bg-green-500");
+
+    setTimeout(() => {
+      btn.innerText = "Copiar";
+      btn.classList.remove("bg-green-500");
+      btn.classList.add("bg-blue-500");
+    }, 1500);
+  });
+
+}
+
+function editarCopy(btn) {
+
+  const container = btn.closest("[data-id]");
+  const span = container.querySelector(".copy-text");
+
+  // Si ya está en modo edición
+  if (btn.innerText === "Guardar") {
+
+    const textarea = container.querySelector("textarea");
+    const nuevoTexto = textarea.value;
+
+    span.innerText = nuevoTexto;
+    span.classList.remove("hidden");
+
+    textarea.remove();
+
+    btn.innerText = "Editar";
+    btn.classList.remove("bg-green-600");
+    btn.classList.add("bg-gray-500");
+
+    // Guardar en localStorage
+    const id = container.dataset.id;
+    guardarTodosLosCopys();
+
+    return;
+  }
+
+  // Modo edición
+  const textoActual = span.innerText;
+
+  const textarea = document.createElement("textarea");
+  textarea.value = textoActual;
+  textarea.className = "w-full p-2 border rounded mt-2 text-sm";
+
+  span.classList.add("hidden");
+  container.querySelector(".flex").insertBefore(textarea, container.querySelector(".flex").firstChild);
+
+  btn.innerText = "Guardar";
+  btn.classList.remove("bg-gray-500");
+  btn.classList.add("bg-green-600");
+}
+
+function cargarCopysGuardados() {
+
+  const container = document.getElementById("copysContainer");
+  container.innerHTML = "";
+
+  const guardados = JSON.parse(localStorage.getItem("misCopys")) || [];
+
+  if (guardados.length === 0) return;
+
+  guardados.forEach(item => {
+
+    const div = document.createElement("div");
+    div.className = "bg-gray-100 p-3 rounded";
+    div.setAttribute("data-id", item.id);
+
+    div.innerHTML = `
+      <div class="flex justify-between items-start gap-2">
+        <span class="copy-text">${item.texto}</span>
+        <div class="flex gap-2">
+  <button onclick="copiarTexto(this)" class="bg-blue-500 text-white px-3 py-1 rounded text-sm">Copiar</button>
+  <button onclick="editarCopy(this)" class="bg-gray-500 text-white px-3 py-1 rounded text-sm">Editar</button>
+  <button onclick="eliminarCopy(this)" class="bg-red-500 text-white px-3 py-1 rounded text-sm">Eliminar</button>
+</div>
+      </div>
+    `;
+
+    container.appendChild(div);
+  });
+
+}
+
+function agregarCopy() {
+
+  const container = document.getElementById("copysContainer");
+
+  const nuevoId = "copy" + Date.now();
+
+  const div = document.createElement("div");
+  div.className = "bg-gray-100 p-3 rounded";
+  div.setAttribute("data-id", nuevoId);
+
+  div.innerHTML = `
+    <div class="flex justify-between items-start gap-2">
+      <span class="copy-text">Nuevo texto...</span>
+      <div class="flex gap-2">
+  <button onclick="copiarTexto(this)" class="bg-blue-500 text-white px-3 py-1 rounded text-sm">Copiar</button>
+  <button onclick="editarCopy(this)" class="bg-gray-500 text-white px-3 py-1 rounded text-sm">Editar</button>
+  <button onclick="eliminarCopy(this)" class="bg-red-500 text-white px-3 py-1 rounded text-sm">Eliminar</button>
+</div>
+    </div>
+  `;
+
+  container.appendChild(div);
+
+  // Guardar en storage
+  guardarTodosLosCopys();
+}
+
+function guardarTodosLosCopys() {
+
+  const todos = [];
+
+  document.querySelectorAll("[data-id]").forEach(div => {
+    todos.push({
+      id: div.dataset.id,
+      texto: div.querySelector(".copy-text").innerText
+    });
+  });
+
+  localStorage.setItem("misCopys", JSON.stringify(todos));
+}
+
+function eliminarCopy(btn) {
+
+  const container = btn.closest("[data-id]");
+
+  if (!confirm("¿Eliminar este texto?")) return;
+
+  container.remove();
+
+  guardarTodosLosCopys();
+}
+
 </script>
 <div id="modal-cliente" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50">
 
@@ -1040,6 +1193,33 @@ async function guardarConfig() {
         class="bg-green-600 text-white px-4 py-2 rounded">
         Guardar Cambios
       </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL COPYS -->
+<div id="modalCopys" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50">
+  <div class="bg-white w-[600px] max-w-full rounded-xl shadow-xl p-6">
+
+    <div class="flex justify-between items-center mb-4">
+  <h2 class="text-lg font-bold">Textos para copiar</h2>
+  <div class="flex gap-2">
+    <button onclick="agregarCopy()" class="bg-green-600 text-white px-3 py-1 rounded text-sm">
+      + Agregar
+    </button>
+    <button onclick="cerrarModalCopys()" class="text-gray-500 text-xl">&times;</button>
+  </div>
+</div>
+
+    <div class="space-y-3">
+
+      <div id="copysContainer" class="space-y-3">
+
+  
+
+</div>
+
     </div>
 
   </div>
