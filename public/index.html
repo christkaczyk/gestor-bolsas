@@ -254,7 +254,7 @@ let ventasGlobal = [];
   }).format(valor);
 };
 
-  async function cargarClientes() {
+  window.cargarClientes = async function() {
 
   const res = await fetch("/clientes");
   clientesGlobal = await res.json();
@@ -605,29 +605,24 @@ window.eliminarCliente = async function(id) {
   }
 };
 
-window.editarCliente = async function(id, nombre, whatsapp) {
+window.editarCliente = function(id) {
 
-  const nuevoNombre = prompt("Nombre:", nombre);
-  if (!nuevoNombre) return;
+  const cliente = clientesGlobal.find(c => c.id === id);
+  if (!cliente) return;
 
-  const nuevoWhatsapp = prompt("Whatsapp:", whatsapp);
-  if (!nuevoWhatsapp) return;
+  clienteEditandoId = id;
 
-  try {
-    await fetch(`/clientes/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        nombre: nuevoNombre,
-        whatsapp: nuevoWhatsapp
-      })
-    });
+  // Cargar datos en el modal
+  document.getElementById("modal-nombre").value = cliente.nombre;
+  document.getElementById("modal-whatsapp").value = cliente.whatsapp;
+  document.getElementById("modal-direccion").value = cliente.direccion || "";
+  document.getElementById("modal-localidad").value = cliente.localidad || "";
 
-    await cargarClientes();
+  // Cambiar texto del botón
+  const boton = document.querySelector("#modal-cliente button.bg-indigo-600");
+  boton.innerText = "Actualizar Cliente";
 
-  } catch (error) {
-    console.error(error);
-  }
+  abrirModalCliente();
 };
 
 window.eliminarVenta = async function(id) {
@@ -840,32 +835,58 @@ window.guardarClienteModal = async function() {
     return;
   }
 
-  const res = await fetch("/clientes", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      nombre,
-      whatsapp,
-      direccion,
-      localidad
-    })
-  });
+  try {
 
-  const data = await res.json();
+    // 🔵 SI ESTAMOS EDITANDO
+    if (clienteEditandoId) {
 
-  if (!res.ok) {
-    alert(data.error || "Error al crear cliente");
-    return;
+      await fetch(`/clientes/${clienteEditandoId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre,
+          whatsapp,
+          direccion,
+          localidad
+        })
+      });
+
+      clienteEditandoId = null;
+
+    } 
+    // 🟢 SI ESTAMOS CREANDO
+    else {
+
+      await fetch("/clientes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nombre,
+          whatsapp,
+          direccion,
+          localidad
+        })
+      });
+
+    }
+
+    cerrarModalCliente();
+    await cargarClientes();
+
+    // Reset campos
+    document.getElementById("modal-nombre").value = "";
+    document.getElementById("modal-whatsapp").value = "";
+    document.getElementById("modal-direccion").value = "";
+    document.getElementById("modal-localidad").value = "";
+
+    // Restaurar texto botón
+    const boton = document.querySelector("#modal-cliente button.bg-indigo-600");
+    boton.innerText = "Guardar Cliente";
+
+  } catch (error) {
+    console.error(error);
+    alert("Error al guardar cliente");
   }
-
-  cerrarModalCliente();
-  await cargarClientes();
-
-  document.getElementById("modal-nombre").value = "";
-  document.getElementById("modal-whatsapp").value = "";
-  document.getElementById("modal-direccion").value = "";
-  document.getElementById("modal-localidad").value = "";
-
 };
 
 window.cerrarModalHistorial = function() {
@@ -879,6 +900,7 @@ function abrirModalHistorial() {
 
 let clientesGlobal = [];
 let clienteSeleccionadoId = null;
+let clienteEditandoId = null;
 
 window.toggleClienteDropdown = function() {
   document.getElementById("cliente-dropdown").classList.toggle("hidden");

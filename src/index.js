@@ -378,13 +378,13 @@ app.post("/productos", async (req, res) => {
 // Crear nuevo cliente
 app.post("/clientes", async (req, res) => {
   try {
-    const { nombre, whatsapp } = req.body;
+    const { nombre, whatsapp, direccion, localidad } = req.body;
 
     if (!nombre || !whatsapp) {
       return res.status(400).json({ error: "Faltan datos" });
     }
 
-    // 1️⃣ Validar que no exista whatsapp
+    // Validar whatsapp único
     const existe = await pool.query(
       "SELECT id FROM clientes WHERE whatsapp = $1",
       [whatsapp]
@@ -394,24 +394,22 @@ app.post("/clientes", async (req, res) => {
       return res.status(400).json({ error: "Whatsapp ya registrado" });
     }
 
-    // 2️⃣ Obtener cantidad actual de clientes
+    // Generar código archivo
     const count = await pool.query("SELECT COUNT(*) FROM clientes");
     const numero = parseInt(count.rows[0].count) + 1;
-
     const numeroFormateado = numero.toString().padStart(2, "0");
-
     const ultimos4 = whatsapp.slice(-4);
-
     const archivo_codigo = `${numeroFormateado}-${ultimos4}`;
 
-    // 3️⃣ Insertar cliente
+    // INSERT COMPLETO
     await pool.query(
-      `INSERT INTO clientes (nombre, whatsapp, archivo_codigo)
-       VALUES ($1,$2,$3)`,
-      [nombre, whatsapp, archivo_codigo]
+      `INSERT INTO clientes 
+       (nombre, whatsapp, archivo_codigo, direccion, localidad)
+       VALUES ($1,$2,$3,$4,$5)`,
+      [nombre, whatsapp, archivo_codigo, direccion || null, localidad || null]
     );
 
-    res.json({ message: "Cliente creado correctamente" });
+    res.status(201).json({ message: "Cliente creado correctamente" });
 
   } catch (error) {
     console.error(error);
@@ -525,17 +523,19 @@ app.get("/precios-pack/:productoId", async (req, res) => {
 app.put("/clientes/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, whatsapp } = req.body;
+    const { nombre, whatsapp, direccion, localidad } = req.body;
 
     await pool.query(
       `UPDATE clientes
        SET nombre = $1,
-           whatsapp = $2
-       WHERE id = $3`,
-      [nombre, whatsapp, id]
+           whatsapp = $2,
+           direccion = $3,
+           localidad = $4
+       WHERE id = $5`,
+      [nombre, whatsapp, direccion, localidad, id]
     );
 
-    res.json({ message: "Cliente actualizado" });
+    res.json({ message: "Cliente actualizado correctamente" });
 
   } catch (error) {
     console.error(error);
