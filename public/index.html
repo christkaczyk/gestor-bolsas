@@ -7,29 +7,6 @@
   
 </head>
 <body class="bg-slate-100 p-6">
-
-    <div class="flex gap-3 mb-4">
-  <button onclick="filtrarEstado('todos')" 
-    class="bg-slate-200 px-4 py-2 rounded-lg hover:bg-slate-300 transition">
-    Todos
-  </button>
-
-  <button onclick="filtrarEstado('pendiente')" 
-    class="bg-red-100 text-red-700 px-4 py-2 rounded-lg hover:bg-red-200 transition">
-    Solo Pendientes
-  </button>
-
-  <button onclick="filtrarEstado('sena_pagada')" 
-    class="bg-amber-100 text-amber-700 px-4 py-2 rounded-lg hover:bg-amber-200 transition">
-    Seña Pagada
-  </button>
-
-  <button onclick="filtrarEstado('entregado')" 
-    class="bg-green-100 text-green-700 px-4 py-2 rounded-lg hover:bg-green-200 transition">
-    Entregados
-  </button>
-</div>
-
 <div class="flex justify-between items-start mb-6">
 
   <div>
@@ -62,27 +39,28 @@
   </div>
 
 
-  <div class="text-sm font-semibold flex gap-6 mt-2">
-
-    <span class="text-red-600">
-      Pendientes: <span id="count-pendiente">0</span>
-    </span>
-
-    <span class="text-amber-600">
-      Seña: <span id="count-sena">0</span>
-    </span>
-
-    <span class="text-green-600">
-      Entregados: <span id="count-entregado">0</span>
-    </span>
-
-  </div>
+  
 
 </div>
 
 <div class="flex justify-end mb-6">
-  <div class="bg-white p-4 rounded-xl shadow w-[450px]">
-    
+  <div class="w-[450px]">
+
+    <!-- CONTADORES -->
+    <div class="text-sm font-semibold flex justify-between mb-2">
+      <span class="text-red-600">
+        Pendiente de compra: <span id="count-comprar">0</span>
+      </span>
+
+      <span class="text-amber-600">
+        Seña: <span id="count-sena">0</span>
+      </span>
+
+      <span class="text-green-600">
+        Entregados: <span id="count-entregado">0</span>
+      </span>
+    </div>
+    <div class="bg-white p-4 rounded-xl shadow">
     <div class="flex justify-between items-center mb-3">
       <span class="font-semibold text-slate-700">Resumen</span>
 
@@ -93,24 +71,42 @@
 
     <div class="grid grid-cols-3 gap-3 text-sm">
 
-      <div class="bg-slate-100 p-3 rounded-lg">
-        <div class="text-slate-500">Bruta</div>
-        <div id="total-bruta" class="font-bold">$0</div>
-      </div>
+  <div class="bg-slate-100 p-3 rounded-lg">
+    <div class="text-slate-500">Bruta</div>
+    <div id="total-bruta" class="font-bold">$0</div>
+  </div>
 
-      <div class="bg-amber-100 p-3 rounded-lg">
-        <div class="text-amber-700">Taller</div>
-        <div id="total-taller" class="font-bold">$0</div>
-      </div>
+  <div class="bg-amber-100 p-3 rounded-lg">
+    <div class="text-amber-700">Taller</div>
+    <div id="total-taller" class="font-bold">$0</div>
+  </div>
 
-      <div class="bg-green-100 p-3 rounded-lg">
-        <div class="text-green-700">Neta</div>
-        <div id="total-neta" class="font-bold">$0</div>
-      </div>
+  <div class="bg-green-100 p-3 rounded-lg">
+    <div class="text-green-700">Neta</div>
+    <div id="total-neta" class="font-bold">$0</div>
+  </div>
 
-    </div>
+  <!-- NUEVAS MÉTRICAS -->
+
+  <div class="bg-blue-100 p-3 rounded-lg">
+    <div class="text-blue-700">Bolsas vendidas</div>
+    <div id="total-bolsas" class="font-bold">0</div>
+  </div>
+
+  <div class="bg-purple-100 p-3 rounded-lg">
+    <div class="text-purple-700">Color más vendido</div>
+    <div id="color-top" class="font-bold">-</div>
+  </div>
+
+  <div class="bg-pink-100 p-3 rounded-lg">
+    <div class="text-pink-700">Tamaño más vendido</div>
+    <div id="tamano-top" class="font-bold">-</div>
+  </div>
+
+</div>
 
   </div>
+</div>
 </div>
 </div>
 
@@ -499,6 +495,7 @@ function calcularTotales() {
     });
   }
 
+  // 🔹 GANANCIAS
   const totalBruta = filtradas.reduce((acc, v) => acc + Number(v.ganancia_total), 0);
   const totalTaller = filtradas.reduce((acc, v) => acc + Number(v.ganancia_taller), 0);
   const totalNeta = filtradas.reduce((acc, v) => acc + Number(v.ganancia_personal), 0);
@@ -506,15 +503,70 @@ function calcularTotales() {
   document.getElementById("total-bruta").innerText = "$" + formatearPesos(totalBruta);
   document.getElementById("total-taller").innerText = "$" + formatearPesos(totalTaller);
   document.getElementById("total-neta").innerText = "$" + formatearPesos(totalNeta);
+
+  // 🔹 CANTIDAD TOTAL DE BOLSAS
+  const totalBolsas = filtradas.reduce((acc, v) => acc + Number(v.cantidad), 0);
+  document.getElementById("total-bolsas").innerText = totalBolsas;
+
+  // 🔹 COLOR MÁS VENDIDO
+  const conteoColores = {};
+
+  filtradas.forEach(v => {
+    const color = v.color_bolsa || "Sin color";
+    if (!conteoColores[color]) {
+      conteoColores[color] = 0;
+    }
+    conteoColores[color] += Number(v.cantidad);
+  });
+
+  let colorTop = "-";
+  let maxColor = 0;
+
+  for (let color in conteoColores) {
+    if (conteoColores[color] > maxColor) {
+      maxColor = conteoColores[color];
+      colorTop = color;
+    }
+  }
+
+  document.getElementById("color-top").innerText = colorTop;
+
+  // 🔹 TAMAÑO + TIPO MÁS VENDIDO
+const conteoTamanos = {};
+
+filtradas.forEach(v => {
+
+  const clave = `${v.tamano} ${v.tipo_asa.toLowerCase()}`;
+
+  if (!conteoTamanos[clave]) {
+    conteoTamanos[clave] = 0;
+  }
+
+  conteoTamanos[clave] += Number(v.cantidad);
+});
+
+  let tamanoTop = "-";
+  let maxTamano = 0;
+
+  for (let t in conteoTamanos) {
+    if (conteoTamanos[t] > maxTamano) {
+      maxTamano = conteoTamanos[t];
+      tamanoTop = t;
+    }
+  }
+
+  document.getElementById("tamano-top").innerText = tamanoTop;
 }
 
 function actualizarContadores() {
 
-  const pendientes = ventasGlobal.filter(v => v.estado === "pendiente").length;
-  const sena = ventasGlobal.filter(v => v.estado === "sena_pagada").length;
-  const entregados = ventasGlobal.filter(v => v.estado === "entregado").length;
+  const comprar = ventasGlobal.filter(v => v.etapa === "comprar").length;
 
-  document.getElementById("count-pendiente").innerText = pendientes;
+  const sena = ventasGlobal.filter(v => v.etapa === "sena").length;
+
+  const entregados = ventasGlobal.filter(v => v.etapa === "entregado").length;
+
+  document.getElementById("count-comprar").innerText = comprar;
   document.getElementById("count-sena").innerText = sena;
   document.getElementById("count-entregado").innerText = entregados;
 }
@@ -756,35 +808,34 @@ for (let producto in conteoProductos) {
     : "Sin pedidos";
 
   let tabla = `
-    <table class="w-full text-sm mt-4 border">
-      <thead class="bg-slate-100">
-        <tr>
-          <th class="p-2">Fecha</th>
-          
-          <th class="p-2">Tamaño</th>
-        <th class="p-2">Bolsa</th>
-        <th class="p-2">Estampa</th>
-        <th class="p-2">Pack</th>
-          <th class="p-2">Total</th>
-          <th class="p-2">Ganancia</th>
-        </tr>
-      </thead>
-      <tbody>
-  `;
+  <table class="w-full text-sm mt-4 border">
+    <thead class="bg-slate-100">
+      <tr>
+        <th class="p-2 text-center">Fecha</th>
+        <th class="p-2 text-center">Tamaño</th>
+        <th class="p-2 text-center">Bolsa</th>
+        <th class="p-2 text-center">Estampa</th>
+        <th class="p-2 text-center">Pack</th>
+        <th class="p-2 text-center">Total</th>
+        <th class="p-2 text-center">Ganancia</th>
+      </tr>
+    </thead>
+    <tbody>
+`;
 
   ventas.forEach(v => {
-    tabla += `
-      <tr class="border-t">
-        <td class="p-2">${formatearFecha(v.fecha)}</td>
-        <td class="p-2">${v.tamano}</td>
-<td class="p-2">${v.color_bolsa}</td>
-<td class="p-2">${v.color_estampa}</td>
-<td class="p-2">${v.cantidad}</td>
-        <td class="p-2">$${formatearPesos(v.precio_final)}</td>
-        <td class="p-2">$${formatearPesos(v.ganancia_personal)}</td>
-      </tr>
-    `;
-  });
+  tabla += `
+    <tr class="border-t">
+      <td class="p-2 text-center">${formatearFecha(v.fecha)}</td>
+      <td class="p-2 text-center">${v.tamano}</td>
+      <td class="p-2 text-center">${v.color_bolsa}</td>
+      <td class="p-2 text-center">${v.color_estampa}</td>
+      <td class="p-2 text-center">${v.cantidad}</td>
+      <td class="p-2 text-center">$${formatearPesos(v.precio_final)}</td>
+      <td class="p-2 text-center">$${formatearPesos(v.ganancia_personal)}</td>
+    </tr>
+  `;
+});
 
   tabla += "</tbody></table>";
 
