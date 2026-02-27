@@ -395,15 +395,15 @@ app.post("/clientes", async (req, res) => {
     }
 
     // 🔥 Obtener número único de secuencia
+// Obtener número único
 const seqResult = await pool.query(
   "SELECT nextval('clientes_codigo_seq') as numero"
 );
 
 const numero = seqResult.rows[0].numero;
-const numeroFormateado = numero.toString().padStart(2, "0");
 
-const ultimos4 = whatsapp.slice(-4);
-const archivo_codigo = `${numeroFormateado}-${ultimos4}`;
+// Formato CL-0001
+const archivo_codigo = `CL-${numero.toString().padStart(4, "0")}`;
 
     // INSERT COMPLETO
     await pool.query(
