@@ -543,6 +543,16 @@ app.put("/clientes/:id", async (req, res) => {
   }
 });
 
+app.delete("/clientes/:id", async (req, res) => {
+  try {
+    await pool.query("DELETE FROM clientes WHERE id = $1", [req.params.id]);
+    res.json({ ok: true });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error al eliminar cliente" });
+  }
+});
+
 app.get("/clientes/:id/ventas", async (req, res) => {
   try {
     const { id } = req.params;

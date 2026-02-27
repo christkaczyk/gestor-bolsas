@@ -283,15 +283,30 @@ let ventasGlobal = [];
 function agregarClienteALista(cliente) {
 
   const div = document.createElement("div");
-  div.className = "px-3 py-2 hover:bg-slate-100 cursor-pointer text-sm";
+  div.className = "group flex justify-between items-center px-3 py-2 hover:bg-slate-100 text-sm";
 
-  div.innerText = `${cliente.nombre} (${cliente.archivo_codigo})`;
+  div.innerHTML = `
+    <div class="flex-1 cursor-pointer"
+         onclick="seleccionarCliente(${cliente.id}, '${cliente.nombre.replace(/'/g, "\\'")}')">
+      ${cliente.nombre} (${cliente.archivo_codigo})
+    </div>
 
-  div.onclick = function() {
-    clienteSeleccionadoId = cliente.id;
-    document.getElementById("cliente-boton").innerText = cliente.nombre;
-    document.getElementById("cliente-dropdown").classList.add("hidden");
-  };
+    <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition">
+
+      <button 
+        onclick="editarCliente(${cliente.id}, '${cliente.nombre.replace(/'/g, "\\'")}', '${cliente.whatsapp}')"
+        class="text-amber-500 hover:text-amber-700 text-sm">
+        🔨
+      </button>
+
+      <button 
+        onclick="eliminarCliente(${cliente.id})"
+        class="text-red-500 hover:text-red-700 text-sm">
+        ✕
+      </button>
+
+    </div>
+  `;
 
   document.getElementById("lista-clientes").appendChild(div);
 }
@@ -562,6 +577,58 @@ window.revertirEntrega = async function(id) {
   cargarVentas();
 
 });
+
+window.seleccionarCliente = function(id, nombre) {
+  clienteSeleccionadoId = id;
+  document.getElementById("cliente-boton").innerText = nombre;
+  document.getElementById("cliente-dropdown").classList.add("hidden");
+};
+
+window.eliminarCliente = async function(id) {
+
+  if (!confirm("¿Eliminar este cliente?")) return;
+
+  try {
+    const res = await fetch(`/clientes/${id}`, {
+      method: "DELETE"
+    });
+
+    if (!res.ok) {
+      alert("No se puede eliminar (puede tener ventas asociadas)");
+      return;
+    }
+
+    await cargarClientes();
+
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+window.editarCliente = async function(id, nombre, whatsapp) {
+
+  const nuevoNombre = prompt("Nombre:", nombre);
+  if (!nuevoNombre) return;
+
+  const nuevoWhatsapp = prompt("Whatsapp:", whatsapp);
+  if (!nuevoWhatsapp) return;
+
+  try {
+    await fetch(`/clientes/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nombre: nuevoNombre,
+        whatsapp: nuevoWhatsapp
+      })
+    });
+
+    await cargarClientes();
+
+  } catch (error) {
+    console.error(error);
+  }
+};
 
 window.eliminarVenta = async function(id) {
 
