@@ -436,6 +436,48 @@ app.get("/precios-pack/:productoId", async (req, res) => {
   }
 });
 
+app.delete("/ventas/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await pool.query(
+      "DELETE FROM ventas WHERE id = $1 RETURNING *",
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Venta no encontrada" });
+    }
+
+    res.json({ message: "Venta eliminada correctamente" });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error al eliminar venta" });
+  }
+});
+
+app.put("/ventas/:id/etapa", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { etapa } = req.body;
+
+    const result = await pool.query(
+      `UPDATE ventas
+       SET etapa = $1
+       WHERE id = $2
+       RETURNING *`,
+      [etapa, id]
+    );
+
+    res.json(result.rows[0]);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error al actualizar etapa" });
+  }
+});
+
 app.listen(process.env.PORT, () => {
   console.log("Servidor corriendo en puerto", process.env.PORT);
 });

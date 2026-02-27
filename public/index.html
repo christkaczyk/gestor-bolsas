@@ -223,7 +223,6 @@
           <th class="px-3 py-2">Taller</th>
           <th class="px-3 py-2">Neta</th>
           <th class="px-3 py-2">ARCA</th>
-          <th class="px-3 py-2">Estado</th>
           <th class="px-3 py-2">Historial</th>
           <th class="px-3 py-2">Acción</th>
           
@@ -375,14 +374,14 @@ actualizarContadores();
       const fila = document.createElement("tr");
       let colorEstado = "";
 
-if (v.estado === "pendiente") {
-  colorEstado = "bg-red-50";
-} else if (v.estado === "sena_pagada") {
-  colorEstado = "bg-amber-50";
-} else if (v.estado === "en_produccion") {
-  colorEstado = "bg-blue-50";
-} else if (v.estado === "entregado") {
-  colorEstado = "bg-green-50";
+if (v.etapa === "comprar") {
+  colorEstado = "bg-red-100";
+} else if (v.etapa === "sena") {
+  colorEstado = "bg-yellow-100";
+} else if (v.etapa === "terminado") {
+  colorEstado = "bg-lime-200";
+} else if (v.etapa === "entregado") {
+  colorEstado = "bg-green-300";
 }
 
 fila.className = colorEstado;
@@ -414,17 +413,7 @@ fila.className = colorEstado;
     class="w-4 h-4"
   >
 </td>
-        <td>
-  <span class="
-    px-2 py-1 rounded-full text-xs font-semibold
-    ${v.estado === "pendiente" ? "bg-red-100 text-red-700" : ""}
-    ${v.estado === "sena_pagada" ? "bg-amber-100 text-amber-700" : ""}
-    ${v.estado === "en_produccion" ? "bg-blue-100 text-blue-700" : ""}
-    ${v.estado === "entregado" ? "bg-green-100 text-green-700" : ""}
-  ">
-    ${v.estado.replace("_", " ")}
-  </span>
-</td>
+        
 
 <td class="text-center align-middle">
   <button onclick="verHistorial(${v.cliente_id})"
@@ -433,22 +422,31 @@ fila.className = colorEstado;
   </button>
 </td>
 
-        <td>
-          ${v.estado !== "entregado"
-  ? `<button onclick="marcarEntregado(${v.id})"
-      class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-lg transition">
-      Entregar
-     </button>`
-  : `<button onclick="revertirEntrega(${v.id})"
-      class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1 rounded-lg transition">
-      Deshacer
-     </button>`}
-        </td>
-      `;
+        <td class="flex gap-2 items-center">
+
+  <select 
+    onchange="cambiarEtapa(${v.id}, this.value)"
+    class="border rounded px-2 py-1 text-sm"
+  >
+    <option value="comprar" ${v.etapa === "comprar" ? "selected" : ""}>Comprar</option>
+    <option value="sena" ${v.etapa === "sena" ? "selected" : ""}>Seña</option>
+    <option value="terminado" ${v.etapa === "terminado" ? "selected" : ""}>Terminado</option>
+    <option value="entregado" ${v.etapa === "entregado" ? "selected" : ""}>Entregado</option>
+  </select>
+
+  <button 
+    onclick="eliminarVenta(${v.id})"
+    class="text-red-600 hover:text-red-800 font-bold text-lg">
+    ✕
+  </button>
+
+</td>`;
 
       tabla.appendChild(fila);
     });
   }
+
+  window.cargarVentas = cargarVentas;
 
 function cargarFiltroMeses() {
   const select = document.getElementById("filtro-mes");
@@ -564,6 +562,31 @@ window.revertirEntrega = async function(id) {
   cargarVentas();
 
 });
+
+window.eliminarVenta = async function(id) {
+
+  const confirmar = confirm("¿Seguro que querés eliminar esta venta?");
+
+  if (!confirmar) return;
+
+  try {
+    const res = await fetch(`/ventas/${id}`, {
+      method: "DELETE"
+    });
+
+    if (!res.ok) {
+      alert("Error al eliminar venta");
+      return;
+    }
+
+    // recargar tabla
+    await cargarVentas();
+
+  } catch (error) {
+    console.error("Error:", error);
+    alert("Error al eliminar venta");
+  }
+};
 
 window.filtrarEstado = function(estado) {
   const filas = document.querySelectorAll("#tabla-ventas tr");
@@ -1080,6 +1103,21 @@ window.toggleArca = async function(id, estado) {
 
   } catch (error) {
     console.error("Error:", error);
+  }
+};
+
+window.cambiarEtapa = async function(id, etapa) {
+  try {
+    await fetch(`/ventas/${id}/etapa`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ etapa })
+    });
+
+    await cargarVentas();
+
+  } catch (error) {
+    console.error(error);
   }
 };
 
