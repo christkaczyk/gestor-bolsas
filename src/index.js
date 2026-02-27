@@ -394,12 +394,16 @@ app.post("/clientes", async (req, res) => {
       return res.status(400).json({ error: "Whatsapp ya registrado" });
     }
 
-    // Generar código archivo
-    const count = await pool.query("SELECT COUNT(*) FROM clientes");
-    const numero = parseInt(count.rows[0].count) + 1;
-    const numeroFormateado = numero.toString().padStart(2, "0");
-    const ultimos4 = whatsapp.slice(-4);
-    const archivo_codigo = `${numeroFormateado}-${ultimos4}`;
+    // 🔥 Obtener número único de secuencia
+const seqResult = await pool.query(
+  "SELECT nextval('clientes_codigo_seq') as numero"
+);
+
+const numero = seqResult.rows[0].numero;
+const numeroFormateado = numero.toString().padStart(2, "0");
+
+const ultimos4 = whatsapp.slice(-4);
+const archivo_codigo = `${numeroFormateado}-${ultimos4}`;
 
     // INSERT COMPLETO
     await pool.query(
