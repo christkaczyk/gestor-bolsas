@@ -17,13 +17,11 @@
     </h1>
 
     <div class="mt-2">
-  <a href="/resumen/resumen.html">
-    <button
-      class="bg-indigo-600 text-white px-4 py-2 rounded-lg shadow transition"
-    >
-      Presupuesto
-    </button>
-  </a>
+  <button 
+  onclick="abrirModalPresupuesto()"
+  class="bg-indigo-600 text-white px-4 py-2 rounded-lg shadow transition">
+  Presupuesto
+</button>
 </div>
 
 <div class="mt-2">
@@ -1388,6 +1386,142 @@ cargarVentas();
   alert("Nuevo mes creado. Las próximas ventas irán a este mes.");
 }
 
+let presupuestoItems = [];
+let productosPresupuesto = [];
+let packsPresupuesto = {};
+
+async function abrirModalPresupuesto() {
+  document.getElementById("modalPresupuesto").classList.remove("hidden");
+  document.getElementById("modalPresupuesto").classList.add("flex");
+
+  const res = await fetch("/productos");
+  productosPresupuesto = await res.json();
+
+  agregarItem();
+}
+
+function cerrarModalPresupuesto() {
+  document.getElementById("modalPresupuesto").classList.add("hidden");
+}
+
+async function agregarItem() {
+
+  const container = document.getElementById("itemsContainer");
+
+  const div = document.createElement("div");
+  div.className = "border p-3 rounded space-y-2";
+
+  div.innerHTML = `
+    <select class="productoSelect w-full border rounded px-2 py-1"></select>
+    <select class="cantidadSelect w-full border rounded px-2 py-1"></select>
+    <select class="dobleSelect w-full border rounded px-2 py-1">
+      <option value="false">Doble estampa: No</option>
+      <option value="true">Doble estampa: Sí</option>
+    </select>
+    <input type="text" placeholder="Color bolsa" class="colorBolsa w-full border rounded px-2 py-1">
+    <input type="text" placeholder="Color estampa" class="colorEstampa w-full border rounded px-2 py-1">
+  `;
+
+  container.appendChild(div);
+
+  const selectProducto = div.querySelector(".productoSelect");
+
+  productosPresupuesto.forEach(p => {
+    const option = document.createElement("option");
+    option.value = p.id;
+    option.textContent = `${p.tamano} ${p.tipo_asa}`;
+    selectProducto.appendChild(option);
+  });
+
+  selectProducto.addEventListener("change", async () => {
+    const res = await fetch(`/precios-pack/${selectProducto.value}`);
+    const packs = await res.json();
+
+    const selectCantidad = div.querySelector(".cantidadSelect");
+    selectCantidad.innerHTML = "";
+
+    packs.forEach(pack => {
+      const option = document.createElement("option");
+      option.value = pack.cantidad;
+      option.dataset.precio = pack.precio_total;
+      option.textContent = pack.cantidad;
+      selectCantidad.appendChild(option);
+    });
+  });
+
+  selectProducto.dispatchEvent(new Event("change"));
+}
+
+async function generarResumen() {
+
+  const itemsDivs = document.querySelectorAll("#itemsContainer > div");
+
+  let totalGeneral = 0;
+  let texto = "PEDIDOS:\n\n";
+
+  for (let i = 0; i < itemsDivs.length; i++) {
+
+    const productoId = itemsDivs[i].querySelector(".productoSelect").value;
+    const productoTexto = itemsDivs[i].querySelector(".productoSelect").selectedOptions[0].textContent;
+
+    const cantidadSelect = itemsDivs[i].querySelector(".cantidadSelect");
+    const cantidad = cantidadSelect.value;
+    let precio = Number(cantidadSelect.selectedOptions[0].dataset.precio);
+
+    const doble = itemsDivs[i].querySelector(".dobleSelect").value === "true";
+
+    if (doble) precio *= 1.5;
+
+    totalGeneral += precio;
+
+    const colorBolsa = itemsDivs[i].querySelector(".colorBolsa").value;
+    const colorEstampa = itemsDivs[i].querySelector(".colorEstampa").value;
+
+    texto += `${i+1}) ${cantidad}u - ${productoTexto} - Bolsa: ${colorBolsa} - Estampa: ${colorEstampa} - Doble Estampa: ${doble ? "Sí" : "No"}\n\n`;
+  }
+
+  const envio = document.getElementById("presupuestoEnvio").value === "true";
+
+  if (envio) {
+    totalGeneral += 8000;
+    texto += `Envío: Sí (+$8.000)\n\n`;
+  } else {
+    texto += `Envío: No\n\n`;
+  }
+
+  const fechaEntrega = document.getElementById("presupuestoFechaEntrega").value;
+
+  texto += `Fecha de entrega: ${fechaEntrega}\n\n`;
+
+  const sena = totalGeneral / 2;
+  const restante = totalGeneral - sena;
+
+  texto += `TOTAL GENERAL: $${formatearPesos(totalGeneral)}\n`;
+  texto += `SEÑA: $${formatearPesos(sena)}\n`;
+  texto += `RESTARÍAN: $${formatearPesos(restante)}\n\n`;
+
+  texto += `📢 Datos para Transferencia Bancaria 📢
+📌 Banco: Mercadopago
+💳 Alias: zettaprint.mp
+
+A nombre de Christian Tkaczyk.
+✅ Una vez realizada la transferencia, envíanos el comprobante por WhatsApp para confirmar tu pedido.`;
+
+  document.getElementById("resumenPresupuesto").value = texto;
+}
+
+function resetPresupuesto() {
+  document.getElementById("itemsContainer").innerHTML = "";
+  document.getElementById("resumenPresupuesto").value = "";
+  agregarItem();
+}
+
+function copiarResumen() {
+  const texto = document.getElementById("resumenPresupuesto").value;
+  navigator.clipboard.writeText(texto);
+  alert("Resumen copiado");
+}
+
 </script>
 
 
@@ -1563,6 +1697,53 @@ cargarVentas();
 </div>
 
     </div>
+
+  </div>
+</div>
+
+<div id="modalPresupuesto" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50">
+  <div class="bg-white w-[600px] rounded-xl shadow-xl p-6 max-h-[90vh] overflow-y-auto">
+
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-lg font-bold">Generador de Presupuesto</h2>
+      <button onclick="cerrarModalPresupuesto()">✕</button>
+    </div>
+
+    <div id="itemsContainer" class="space-y-4"></div>
+
+    <button onclick="agregarItem()" 
+      class="w-full bg-indigo-600 text-white py-2 rounded mt-3">
+      + Agregar Producto
+    </button>
+
+    <div class="mt-4">
+      <label>Envío</label>
+      <select id="presupuestoEnvio" class="w-full border rounded px-2 py-1">
+        <option value="false">No</option>
+        <option value="true">Sí</option>
+      </select>
+    </div>
+
+    <div class="mt-4">
+      <label>Fecha de entrega</label>
+      <input type="date" id="presupuestoFechaEntrega"
+        class="w-full border rounded px-2 py-1">
+    </div>
+
+    <div class="flex gap-2 mt-4">
+      <button onclick="generarResumen()" class="bg-indigo-600 text-white px-4 py-2 rounded">
+        Generar
+      </button>
+      <button onclick="resetPresupuesto()" class="bg-pink-500 text-white px-4 py-2 rounded">
+        Resetear
+      </button>
+      <button onclick="copiarResumen()" class="bg-black text-white px-4 py-2 rounded">
+        Copiar Resumen
+      </button>
+    </div>
+
+    <textarea id="resumenPresupuesto"
+      class="w-full border rounded mt-4 p-3 text-sm h-64"></textarea>
 
   </div>
 </div>
