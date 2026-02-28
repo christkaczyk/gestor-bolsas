@@ -199,7 +199,7 @@ await pool.query(
         ganancia_taller,
         ganancia_personal,
         factura,
-        estado
+        estado,mes_id
       ]
     );
 
