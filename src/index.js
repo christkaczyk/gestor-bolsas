@@ -97,12 +97,17 @@ app.post("/ventas", async (req, res) => {
       return res.status(400).json({ error: "Pack inválido" });
     }
 
-    let precio_final = packResult.rows[0].precio_total;
+    let precio_final = Number(packResult.rows[0].precio_total);
 
-    // Si es doble estampa suma 50%
-    if (doble_estampa) {
-      precio_final = precio_final * 1.5;
-    }
+// 🔹 Doble estampa suma 50%
+if (doble_estampa) {
+  precio_final = precio_final * 1.5;
+}
+
+// 🔹 Envío suma $8000 fijo
+if (envio_domicilio) {
+  precio_final += 8000;
+}
 
     // ================================
     // 2️⃣ OBTENER COSTO UNITARIO
