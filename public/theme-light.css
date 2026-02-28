@@ -1,0 +1,263 @@
+/* ================================= */
+/* THEME LIGHT - GRADIENT PRO        */
+/* ================================= */
+
+/* ================================= */
+/* BODY BACKGROUND */
+/* ================================= */
+
+body {
+  background: linear-gradient(
+    135deg,
+    #fdf2f8 0%,
+    #f5f3ff 40%,
+    #eef2ff 100%
+  );
+  background-attachment: fixed;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #1f2937;
+}
+
+/* ================================= */
+/* TITULOS */
+/* ================================= */
+
+h1, h2, h3 {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+/* ================================= */
+/* CARDS PRINCIPALES */
+/* ================================= */
+
+.bg-white {
+  background: rgba(255,255,255,0.85) !important;
+  backdrop-filter: blur(10px);
+  border-radius: 20px !important;
+  border: 1px solid rgba(255,255,255,0.6);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+}
+
+/* ================================= */
+/* BOTONES */
+/* ================================= */
+
+button {
+  transition: background 0.2s ease;
+  font-weight: 500;
+}
+
+.bg-indigo-600 {
+  background: linear-gradient(
+    135deg,
+    #6366f1,
+    #8b5cf6
+  ) !important;
+  border: none;
+}
+
+.bg-indigo-600:hover {
+  background: linear-gradient(
+    135deg,
+    #5b5fe0,
+    #7c3aed
+  ) !important;
+}
+
+/* ================================= */
+/* INPUTS */
+/* ================================= */
+
+input,
+select,
+textarea {
+  background: rgba(255,255,255,0.95) !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  transition: border 0.2s ease;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none !important;
+  border-color: #8b5cf6 !important;
+}
+
+/* ================================= */
+/* RESUMEN CARDS */
+/* ================================= */
+
+.bg-slate-100 {
+  background: linear-gradient(
+    135deg,
+    #ffffff,
+    #f1f5f9
+  ) !important;
+}
+
+.bg-amber-100 {
+  background: linear-gradient(
+    135deg,
+    #fff7ed,
+    #fde68a
+  ) !important;
+}
+
+.bg-green-100 {
+  background: linear-gradient(
+    135deg,
+    #ecfdf5,
+    #bbf7d0
+  ) !important;
+}
+
+.bg-blue-100 {
+  background: linear-gradient(
+    135deg,
+    #eff6ff,
+    #bfdbfe
+  ) !important;
+}
+
+.bg-purple-100 {
+  background: linear-gradient(
+    135deg,
+    #f5f3ff,
+    #ddd6fe
+  ) !important;
+}
+
+.bg-pink-100 {
+  background: linear-gradient(
+    135deg,
+    #fdf2f8,
+    #fbcfe8
+  ) !important;
+}
+
+/* ================================= */
+/* TABLA */
+/* ================================= */
+
+thead {
+  background: linear-gradient(
+    135deg,
+    #1e293b,
+    #334155
+  ) !important;
+  color: white;
+}
+
+tbody tr {
+  transition: background 0.2s ease;
+}
+
+tbody tr:hover {
+  background: rgba(255,255,255,0.6);
+}
+
+/* ================================= */
+/* FILA MES AGRUPADOR */
+/* ================================= */
+
+.fila-mes {
+  background: linear-gradient(
+    135deg,
+    #6366f1,
+    #8b5cf6
+  );
+  color: white;
+  cursor: pointer;
+}
+
+.fila-mes:hover {
+  background: linear-gradient(
+    135deg,
+    #5b5fe0,
+    #7c3aed
+  );
+}
+
+/* ================================= */
+/* ESTADOS FILAS */
+/* ================================= */
+
+.bg-red-100 {
+  background: rgba(254,226,226,0.7) !important;
+}
+
+.bg-yellow-100 {
+  background: rgba(254,249,195,0.7) !important;
+}
+
+.bg-lime-200 {
+  background: rgba(217,249,157,0.6) !important;
+}
+
+.bg-green-300 {
+  background: rgba(134,239,172,0.7) !important;
+}
+
+/* ================================= */
+/* CONTADORES SUPERIORES */
+/* ================================= */
+
+.text-red-600 {
+  color: #dc2626 !important;
+}
+
+.text-amber-600 {
+  color: #d97706 !important;
+}
+
+.text-green-600 {
+  color: #15803d !important;
+}
+
+/* ================================= */
+/* MODALES */
+/* ================================= */
+
+.fixed.inset-0 {
+  backdrop-filter: blur(4px);
+}
+
+#modal-cliente .bg-white,
+#modal-historial .bg-white,
+#modalConfig .bg-white,
+#modalCopys .bg-white {
+  background: rgba(255,255,255,0.95) !important;
+  border-radius: 24px !important;
+}
+
+/* ================================= */
+/* HEADER SUPERIOR GRADIENT          */
+/* ================================= */
+
+.header-top {
+  background: linear-gradient(
+    135deg,
+    #fbcfe8 0%,
+    #c4b5fd 50%,
+    #93c5fd 100%
+  );
+  padding: 25px;
+  border-radius: 24px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.08);
+}
+
+/* ================================= */
+/* FIX TABLA HISTORIAL MODAL         */
+/* ================================= */
+
+#modal-historial thead {
+  color: #1e293b !important; /* texto oscuro */
+  font-weight: 600;
+}
+
+#modal-historial thead th {
+  color: #1e293b !important;
+}

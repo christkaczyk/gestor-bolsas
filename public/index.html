@@ -4,10 +4,12 @@
   <meta charset="UTF-8">
   <title>Gestor de Bolsas</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/theme-light.css">
   
 </head>
 <body class="bg-slate-100 p-6">
-<div class="flex justify-between items-start mb-6">
+  
+<div class="header-top flex justify-between items-start mb-6">
 
   <div>
     <h1 class="text-3xl font-bold text-slate-800">
@@ -37,29 +39,8 @@
 </button>
 </div>
   </div>
-
-
-  
-
-</div>
-
 <div class="flex justify-end mb-6">
   <div class="w-[450px]">
-
-    <!-- CONTADORES -->
-    <div class="text-sm font-semibold flex justify-between mb-2">
-      <span class="text-red-600">
-        Pendiente de compra: <span id="count-comprar">0</span>
-      </span>
-
-      <span class="text-amber-600">
-        Seña: <span id="count-sena">0</span>
-      </span>
-
-      <span class="text-green-600">
-        Entregados: <span id="count-entregado">0</span>
-      </span>
-    </div>
     <div class="bg-white p-4 rounded-xl shadow">
     <div class="flex justify-between items-center mb-3">
       <span class="font-semibold text-slate-700">Resumen</span>
@@ -106,8 +87,30 @@
 </div>
 
   </div>
+  <div class="bg-white p-4 rounded-xl shadow">
+  <!-- CONTADORES -->
+    <div class="text-sm font-semibold flex justify-between mb-2">
+      <span class="text-red-600">
+        Pendiente de compra: <span id="count-comprar">0</span>
+      </span>
+
+      <span class="text-amber-600">
+        Seña: <span id="count-sena">0</span>
+      </span>
+
+      <span class="text-green-600">
+        Entregados: <span id="count-entregado">0</span>
+      </span>
+    </div>
+  </div>
 </div>
 </div>
+
+  
+
+</div>
+
+
 
 
 <div class="bg-white p-6 rounded-2xl shadow mb-8">
@@ -422,7 +425,7 @@ const gananciaNetaMes = mes.ventas.reduce(
 
   // 🔹 HEADER DEL MES
   const headerRow = document.createElement("tr");
-  headerRow.className = "bg-slate-300 font-bold cursor-pointer";
+  headerRow.className = "fila-mes font-bold cursor-pointer";
 
   headerRow.innerHTML = `
   <td colspan="21" class="px-3 py-2">
@@ -432,7 +435,7 @@ const gananciaNetaMes = mes.ventas.reduce(
         <span class="flecha">▼</span> ${mes.nombre}
       </div>
 
-      <div class="text-green-700 font-semibold">
+      <div class="text-sky-50 font-semibold">
         Ganancia neta: $${formatearPesos(gananciaNetaMes)}
       </div>
 
