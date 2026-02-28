@@ -414,16 +414,31 @@ ventas.forEach(v => {
 // =============================
 
 Object.values(ventasPorMes).forEach(mes => {
+  // 🔥 Calcular ganancia neta del mes
+const gananciaNetaMes = mes.ventas.reduce(
+  (acc, v) => acc + Number(v.ganancia_personal),
+  0
+);
 
   // 🔹 HEADER DEL MES
   const headerRow = document.createElement("tr");
   headerRow.className = "bg-slate-300 font-bold cursor-pointer";
 
   headerRow.innerHTML = `
-    <td colspan="21" class="px-3 py-2">
-      <span class="flecha">▼</span> ${mes.nombre}
-    </td>
-  `;
+  <td colspan="21" class="px-3 py-2">
+    <div class="flex justify-between items-center">
+      
+      <div>
+        <span class="flecha">▼</span> ${mes.nombre}
+      </div>
+
+      <div class="text-green-700 font-semibold">
+        Ganancia neta: $${formatearPesos(gananciaNetaMes)}
+      </div>
+
+    </div>
+  </td>
+`;
 
   tabla.appendChild(headerRow);
 
@@ -504,17 +519,32 @@ Object.values(ventasPorMes).forEach(mes => {
   });
 
   // 🔹 DROPDOWN TOGGLE
-  headerRow.addEventListener("click", () => {
+  // 🔹 Recuperar estado guardado
+const estadoGuardado = localStorage.getItem("mes-" + mes.nombre);
 
-    const visible = filasMes[0]?.style.display !== "none";
+if (estadoGuardado === "cerrado") {
+  filasMes.forEach(f => f.style.display = "none");
+  headerRow.querySelector(".flecha").textContent = "▶";
+}
 
-    filasMes.forEach(f => {
-      f.style.display = visible ? "none" : "";
-    });
+// 🔹 Toggle con persistencia
+headerRow.addEventListener("click", () => {
 
-    headerRow.querySelector(".flecha").textContent =
-      visible ? "▶" : "▼";
+  const visible = filasMes[0]?.style.display !== "none";
+
+  filasMes.forEach(f => {
+    f.style.display = visible ? "none" : "";
   });
+
+  headerRow.querySelector(".flecha").textContent =
+    visible ? "▶" : "▼";
+
+  // 🔥 Guardar estado
+  localStorage.setItem(
+    "mes-" + mes.nombre,
+    visible ? "cerrado" : "abierto"
+  );
+});
 
 });
   }
@@ -1333,6 +1363,16 @@ async function crearNuevoMes() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ nombre })
   });
+
+// 🔥 Comprimir todos los meses anteriores
+Object.keys(localStorage).forEach(key => {
+  if (key.startsWith("mes-")) {
+    localStorage.setItem(key, "cerrado");
+  }
+});
+
+// 🔥 Refrescar ventas
+cargarVentas();
 
   alert("Nuevo mes creado. Las próximas ventas irán a este mes.");
 }
