@@ -360,12 +360,19 @@ window.filtrarClientes = function() {
   const pack = packsGlobal.find(p => p.cantidad === cantidad);
   if (!pack) return;
 
-  let precio = pack.precio_total;
+  let precio = Number(pack.precio_total);
 
   const doble = document.getElementById("doble_estampa").checked;
+  const envio = document.getElementById("envio_domicilio").checked;
 
+  // 🔹 Doble estampa suma 50%
   if (doble) {
-    precio = precio * 1.5; // suma 50%
+    precio = precio * 1.5;
+  }
+
+  // 🔹 Envío suma $8000 fijo
+  if (envio) {
+    precio += 8000;
   }
 
   document.getElementById("precio_final").value = precio;
@@ -579,6 +586,7 @@ document.getElementById("filtro-mes").addEventListener("change", calcularTotales
 
   document.getElementById("cantidad").addEventListener("change", calcularPrecioPack);
 document.getElementById("doble_estampa").addEventListener("change", calcularPrecioPack);
+document.getElementById("envio_domicilio").addEventListener("change", calcularPrecioPack);
   document.getElementById("form-venta").addEventListener("submit", async (e) => {
     e.preventDefault();
 
