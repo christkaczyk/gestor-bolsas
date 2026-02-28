@@ -17,7 +17,7 @@
     <div class="mt-2">
   <a href="/resumen/resumen.html">
     <button
-      class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow transition"
+      class="bg-indigo-600 text-white px-4 py-2 rounded-lg shadow transition"
     >
       Presupuesto
     </button>
@@ -25,14 +25,14 @@
 </div>
 
 <div class="mt-2">
-  <button onclick="abrirModalCopys()" class="bg-green-600 text-white px-4 py-2 rounded">
+  <button onclick="abrirModalCopys()" class="bg-indigo-600 text-white px-4 py-2 rounded">
   Copys
 </button>
 </div>
 <div class="mt-2">
 <button 
   onclick="abrirModalConfig()" 
-  class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow transition">
+  class="bg-indigo-600 text-white px-4 py-2 rounded-lg shadow transition">
   Config
 </button>
 </div>
@@ -108,7 +108,7 @@
   </div>
 </div>
 </div>
-</div>
+
 
 <div class="bg-white p-6 rounded-2xl shadow mb-8">
   <h2 class="text-xl font-semibold mb-4 text-slate-700">Nueva Venta</h2>
@@ -183,7 +183,7 @@
   </form>
 </div>
 
-<div class="flex justify-between items-center mb-4">
+<div class="flex items-center mb-4">
 
   <input 
     type="text" 
@@ -191,7 +191,11 @@
     placeholder="Buscar cliente, archivo, whatsapp..."
     class="border border-slate-300 rounded-lg px-4 py-2 w-80 focus:outline-none focus:ring-2 focus:ring-indigo-500"
   >
-
+<button 
+  onclick="crearNuevoMes()" 
+  class="bg-indigo-600 text-white px-4 py-2 rounded-lg">
+  + MES
+</button>
 </div>
 
 <div class="bg-white rounded-2xl shadow overflow-hidden">
@@ -381,80 +385,138 @@ actualizarContadores();
     const tabla = document.getElementById("tabla-ventas");
     tabla.innerHTML = "";
 
-    ventas.forEach(v => {
-      const fila = document.createElement("tr");
-      let colorEstado = "";
+    // =============================
+// 🔥 AGRUPAR VENTAS POR MES
+// =============================
 
-if (v.etapa === "comprar") {
-  colorEstado = "bg-red-100";
-} else if (v.etapa === "sena") {
-  colorEstado = "bg-yellow-100";
-} else if (v.etapa === "terminado") {
-  colorEstado = "bg-lime-200";
-} else if (v.etapa === "entregado") {
-  colorEstado = "bg-green-300";
-}
+const ventasPorMes = {};
 
-fila.className = colorEstado;
+ventas.forEach(v => {
 
-      fila.innerHTML = `
-        <td>${formatearFecha(v.fecha)}</td>
-        <td>${v.nombre}</td>
-        <td>${v.whatsapp}</td>
-        <td>${v.archivo_codigo}</td>
-        <td>${v.tamano} ${v.tipo_asa}</td>
-        <td>${v.cantidad}</td>
-        <td>${v.color_bolsa}</td>
-        <td>${v.color_estampa}</td>
-        <td>${v.doble_estampa ? "SI" : "NO"}</td>
-        <td>${v.envio_domicilio ? "SI" : "NO"}</td>
-        <td>$${formatearPesos(v.precio_final)}</td>
-        <td>$${formatearPesos(v.sena)}</td>
-        <td>$${formatearPesos(v.restante)}</td>
-        <td>${formatearFecha(v.fecha_entrega)}</td>
-        <td>$${formatearPesos(v.costo_total)}</td>
-        <td>$${formatearPesos(v.ganancia_total)}</td>
-        <td>$${formatearPesos(v.ganancia_taller)}</td>
-        <td>$${formatearPesos(v.ganancia_personal)}</td>
-        <td class="text-center align-middle">
-  <input 
-    type="checkbox" 
-    ${v.factura ? "checked" : ""}
-    onchange="toggleArca(${v.id}, this.checked)"
-    class="w-4 h-4"
-  >
-</td>
-        
+  const fecha = new Date(v.fecha);
+  const clave = `${fecha.getFullYear()}-${fecha.getMonth()}`;
 
-<td class="text-center align-middle">
-  <button onclick="verHistorial(${v.cliente_id})"
-    class="bg-indigo-500 text-white px-2 py-1 rounded text-xs hover:bg-indigo-600 transition">
-    Ver
-  </button>
-</td>
+  if (!ventasPorMes[clave]) {
 
-        <td class="flex gap-2 items-center">
+    const nombreMes = fecha.toLocaleString("es-AR", { month: "long" });
 
-  <select 
-    onchange="cambiarEtapa(${v.id}, this.value)"
-    class="border rounded px-2 py-1 text-sm"
-  >
-    <option value="comprar" ${v.etapa === "comprar" ? "selected" : ""}>Comprar</option>
-    <option value="sena" ${v.etapa === "sena" ? "selected" : ""}>Seña</option>
-    <option value="terminado" ${v.etapa === "terminado" ? "selected" : ""}>Terminado</option>
-    <option value="entregado" ${v.etapa === "entregado" ? "selected" : ""}>Entregado</option>
-  </select>
+    ventasPorMes[clave] = {
+      nombre: `${nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1)} ${fecha.getFullYear()}`,
+      ventas: []
+    };
+  }
 
-  <button 
-    onclick="eliminarVenta(${v.id})"
-    class="text-red-600 hover:text-red-800 font-bold text-lg">
-    ✕
-  </button>
+  ventasPorMes[clave].ventas.push(v);
+});
 
-</td>`;
+// =============================
+// 🔥 RENDERIZAR MESES CON DROPDOWN
+// =============================
 
-      tabla.appendChild(fila);
+Object.values(ventasPorMes).forEach(mes => {
+
+  // 🔹 HEADER DEL MES
+  const headerRow = document.createElement("tr");
+  headerRow.className = "bg-slate-300 font-bold cursor-pointer";
+
+  headerRow.innerHTML = `
+    <td colspan="21" class="px-3 py-2">
+      <span class="flecha">▼</span> ${mes.nombre}
+    </td>
+  `;
+
+  tabla.appendChild(headerRow);
+
+  // 🔹 GUARDAMOS LAS FILAS DEL MES
+  const filasMes = [];
+
+  mes.ventas.forEach(v => {
+
+    const fila = document.createElement("tr");
+
+    let colorEstado = "";
+
+    if (v.etapa === "comprar") {
+      colorEstado = "bg-red-100";
+    } else if (v.etapa === "sena") {
+      colorEstado = "bg-yellow-100";
+    } else if (v.etapa === "terminado") {
+      colorEstado = "bg-lime-200";
+    } else if (v.etapa === "entregado") {
+      colorEstado = "bg-green-300";
+    }
+
+    fila.className = colorEstado;
+
+    fila.innerHTML = `
+      <td>${formatearFecha(v.fecha)}</td>
+      <td>${v.nombre}</td>
+      <td>${v.whatsapp}</td>
+      <td>${v.archivo_codigo}</td>
+      <td>${v.tamano} ${v.tipo_asa}</td>
+      <td>${v.cantidad}</td>
+      <td>${v.color_bolsa}</td>
+      <td>${v.color_estampa}</td>
+      <td>${v.doble_estampa ? "SI" : "NO"}</td>
+      <td>${v.envio_domicilio ? "SI" : "NO"}</td>
+      <td>$${formatearPesos(v.precio_final)}</td>
+      <td>$${formatearPesos(v.sena)}</td>
+      <td>$${formatearPesos(v.restante)}</td>
+      <td>${formatearFecha(v.fecha_entrega)}</td>
+      <td>$${formatearPesos(v.costo_total)}</td>
+      <td>$${formatearPesos(v.ganancia_total)}</td>
+      <td>$${formatearPesos(v.ganancia_taller)}</td>
+      <td>$${formatearPesos(v.ganancia_personal)}</td>
+      <td class="text-center align-middle">
+        <input 
+          type="checkbox" 
+          ${v.factura ? "checked" : ""}
+          onchange="toggleArca(${v.id}, this.checked)"
+          class="w-4 h-4"
+        >
+      </td>
+      <td class="text-center align-middle">
+        <button onclick="verHistorial(${v.cliente_id})"
+          class="bg-indigo-500 text-white px-2 py-1 rounded text-xs hover:bg-indigo-600 transition">
+          Ver
+        </button>
+      </td>
+      <td class="flex gap-2 items-center">
+        <select 
+          onchange="cambiarEtapa(${v.id}, this.value)"
+          class="border rounded px-2 py-1 text-sm"
+        >
+          <option value="comprar" ${v.etapa === "comprar" ? "selected" : ""}>Comprar</option>
+          <option value="sena" ${v.etapa === "sena" ? "selected" : ""}>Seña</option>
+          <option value="terminado" ${v.etapa === "terminado" ? "selected" : ""}>Terminado</option>
+          <option value="entregado" ${v.etapa === "entregado" ? "selected" : ""}>Entregado</option>
+        </select>
+        <button 
+          onclick="eliminarVenta(${v.id})"
+          class="text-red-600 hover:text-red-800 font-bold text-lg">
+          ✕
+        </button>
+      </td>
+    `;
+
+    filasMes.push(fila);
+    tabla.appendChild(fila);
+  });
+
+  // 🔹 DROPDOWN TOGGLE
+  headerRow.addEventListener("click", () => {
+
+    const visible = filasMes[0]?.style.display !== "none";
+
+    filasMes.forEach(f => {
+      f.style.display = visible ? "none" : "";
     });
+
+    headerRow.querySelector(".flecha").textContent =
+      visible ? "▶" : "▼";
+  });
+
+});
   }
 
   window.cargarVentas = cargarVentas;
@@ -1261,6 +1323,19 @@ window.cambiarEtapa = async function(id, etapa) {
   }
 };
 
+async function crearNuevoMes() {
+  const nombre = prompt("Nombre del nuevo mes (ej: Marzo 2026)");
+
+  if (!nombre) return;
+
+  await fetch("/meses", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ nombre })
+  });
+
+  alert("Nuevo mes creado. Las próximas ventas irán a este mes.");
+}
 
 </script>
 
@@ -1362,7 +1437,7 @@ window.cambiarEtapa = async function(id, etapa) {
 
     <div class="mt-6 text-right">
       <button onclick="guardarConfig()" 
-        class="bg-green-600 text-white px-4 py-2 rounded">
+        class="bg-indigo-600 text-white px-4 py-2 rounded">
         Guardar
       </button>
     </div>
@@ -1406,7 +1481,7 @@ window.cambiarEtapa = async function(id, etapa) {
 
     <div class="mt-6 text-right">
       <button onclick="guardarConfig()" 
-        class="bg-green-600 text-white px-4 py-2 rounded">
+        class="bg-indigo-600 text-white px-4 py-2 rounded">
         Guardar Cambios
       </button>
     </div>
@@ -1421,7 +1496,7 @@ window.cambiarEtapa = async function(id, etapa) {
     <div class="flex justify-between items-center mb-4">
   <h2 class="text-lg font-bold">Textos para copiar</h2>
   <div class="flex gap-2">
-    <button onclick="agregarCopy()" class="bg-green-600 text-white px-3 py-1 rounded text-sm">
+    <button onclick="agregarCopy()" class="bg-indigo-600 text-white px-3 py-1 rounded text-sm">
       + Agregar
     </button>
     <button onclick="cerrarModalCopys()" class="text-gray-500 text-xl">&times;</button>

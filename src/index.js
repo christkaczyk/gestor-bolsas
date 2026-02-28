@@ -136,11 +136,23 @@ app.post("/ventas", async (req, res) => {
     // Estado inicial
     const estado = "sena_pagada";
 
-    // ================================
-    // 5️⃣ INSERTAR VENTA
-    // ================================
+// ================================
+// 5️⃣ INSERTAR VENTA
+// ================================
 
-    await pool.query(
+// 🔥 NUEVO BLOQUE — obtener mes activo
+const mesResult = await pool.query(
+  "SELECT id FROM meses WHERE activo = true ORDER BY id DESC LIMIT 1"
+);
+
+if (mesResult.rows.length === 0) {
+  return res.status(400).json({ error: "No hay mes activo" });
+}
+
+const mes_id = mesResult.rows[0].id;
+
+// 🔥 TU INSERT EXISTENTE (modificado)
+await pool.query(
       `INSERT INTO ventas (
         fecha,
         cliente_id,
@@ -159,10 +171,10 @@ app.post("/ventas", async (req, res) => {
         ganancia_taller,
         ganancia_personal,
         factura,
-        estado
+        estado, mes_id
       )
       VALUES (
-        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18
+        $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19
       )`,
       [
         fecha,
@@ -670,3 +682,24 @@ app.put("/config/guardar", async (req, res) => {
   res.json({ ok: true });
 });
 
+app.post("/meses", async (req, res) => {
+  try {
+    const { nombre } = req.body;
+
+    // Desactivar mes anterior
+    await pool.query("UPDATE meses SET activo = false WHERE activo = true");
+
+    const result = await pool.query(
+      `INSERT INTO meses (nombre, fecha_inicio, activo)
+       VALUES ($1, NOW(), true)
+       RETURNING *`,
+      [nombre]
+    );
+
+    res.json(result.rows[0]);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error al crear mes" });
+  }
+});
