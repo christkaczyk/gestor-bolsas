@@ -97,17 +97,18 @@ app.post("/ventas", async (req, res) => {
       return res.status(400).json({ error: "Pack inválido" });
     }
 
-    let precio_final = Number(packResult.rows[0].precio_total);
+    let precio_producto = Number(packResult.rows[0].precio_total);
 
-// 🔹 Doble estampa suma 50%
+// 🔹 Doble estampa
 if (doble_estampa) {
-  precio_final = precio_final * 1.5;
+  precio_producto = precio_producto * 1.5;
 }
 
-// 🔹 Envío suma $8000 fijo
-if (envio_domicilio) {
-  precio_final += 8000;
-}
+// 🔹 Envío separado
+let envio_monto = envio_domicilio ? 8000 : 0;
+
+// 🔹 Precio final real que paga el cliente
+const precio_final = precio_producto + envio_monto;
 
     // ================================
     // 2️⃣ OBTENER COSTO UNITARIO
@@ -127,7 +128,7 @@ if (envio_domicilio) {
     // 3️⃣ CALCULAR GANANCIAS
     // ================================
 
-    const ganancia_total = precio_final - costo_total;
+    const ganancia_total = precio_producto - costo_total;
     const ganancia_taller = ganancia_total * 0.05;
     const ganancia_personal = ganancia_total - ganancia_taller;
 
