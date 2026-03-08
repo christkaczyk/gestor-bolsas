@@ -1504,16 +1504,23 @@ if (envio) {
   texto += `TOTAL GENERAL: $${formatearPesos(totalGeneral)}\n`;
 }
 
-  const fechaEntrega = document.getElementById("presupuestoFechaEntrega").value;
-
-  texto += `Fecha de entrega: ${fechaEntrega}\n\n`;
+  
 
   const sena = totalGeneral / 2;
   const restante = totalGeneral - sena;
-
-  texto += `TOTAL GENERAL: $${formatearPesos(totalGeneral)}\n`;
   texto += `SEÑA: $${formatearPesos(sena)}\n`;
   texto += `RESTARÍAN: $${formatearPesos(restante)}\n\n`;
+
+const fechaISO = document.getElementById("presupuestoFechaEntrega").value;
+
+let fechaEntrega = "";
+
+if (fechaISO) {
+  const partes = fechaISO.split("-");
+  fechaEntrega = `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+  texto += `Fecha de entrega: ${fechaEntrega}\n\n`;
 
   texto += `📢 Datos para Transferencia Bancaria 📢
 📌 Banco: Mercadopago
