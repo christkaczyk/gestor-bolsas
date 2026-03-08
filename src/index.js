@@ -128,7 +128,7 @@ const precio_final = precio_producto + envio_monto;
     // 3️⃣ CALCULAR GANANCIAS
     // ================================
 
-    const ganancia_total = precio_producto - costo_total;
+    const ganancia_total = precio_final - costo_total;
     const ganancia_taller = ganancia_total * 0.05;
     const ganancia_personal = ganancia_total - ganancia_taller;
 
