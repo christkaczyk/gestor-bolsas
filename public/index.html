@@ -471,13 +471,13 @@ const gananciaNetaMes = mes.ventas.reduce(
     let colorEstado = "";
 
     if (v.etapa === "comprar") {
-      colorEstado = "bg-red-100";
+      colorEstado = "bg-red-400";
     } else if (v.etapa === "sena") {
-      colorEstado = "bg-yellow-100";
+      colorEstado = "bg-yellow-400";
     } else if (v.etapa === "terminado") {
-      colorEstado = "bg-lime-200";
+      colorEstado = "bg-lime-400";
     } else if (v.etapa === "entregado") {
-      colorEstado = "bg-green-300";
+      colorEstado = "bg-green-400";
     }
 
     fila.className = colorEstado;
