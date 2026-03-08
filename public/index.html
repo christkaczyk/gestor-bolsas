@@ -445,15 +445,17 @@ const gananciaNetaMes = mes.ventas.reduce(
 
   headerRow.innerHTML = `
   <td colspan="21" class="px-3 py-2">
-    <div class="flex justify-between items-center">
-      
-      <div>
-        <span class="flecha">▼</span> ${mes.nombre}
-      </div>
+    <div class="flex items-center gap-6">
 
-      <div class="text-sky-50 font-semibold">
+      <span class="flecha">▼</span>
+
+      <span class="font-semibold">
+        ${mes.nombre}
+      </span>
+
+      <span class="text-sky-50 font-semibold">
         Ganancia neta: $${formatearPesos(gananciaNetaMes)}
-      </div>
+      </span>
 
     </div>
   </td>
