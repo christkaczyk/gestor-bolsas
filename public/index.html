@@ -1495,12 +1495,14 @@ async function generarResumen() {
 
   const envio = document.getElementById("presupuestoEnvio").value === "true";
 
-  if (envio) {
-    totalGeneral += 8000;
-    texto += `Envío: Sí (+$8.000)\n\n`;
-  } else {
-    texto += `Envío: No\n\n`;
-  }
+if (envio) {
+  totalGeneral += 8000;
+  texto += `Envío: Sí (+$8.000)\n\n`;
+  texto += `TOTAL GENERAL + ENVÍO: $${formatearPesos(totalGeneral)}\n`;
+} else {
+  texto += `Envío: No\n\n`;
+  texto += `TOTAL GENERAL: $${formatearPesos(totalGeneral)}\n`;
+}
 
   const fechaEntrega = document.getElementById("presupuestoFechaEntrega").value;
 
