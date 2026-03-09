@@ -66,17 +66,17 @@ app.get("/ventas", async (req, res) => {
 app.post("/ventas", async (req, res) => {
   try {
     const {
-      fecha,
-      cliente_id,
-      producto_id,
-      cantidad,
-      color_bolsa,
-      color_estampa,
-      doble_estampa,
-      envio_domicilio,
-      fecha_entrega,
-      factura
-    } = req.body;
+  fecha,
+  cliente_id,
+  producto_id,
+  cantidad,
+  color_bolsa,
+  color_estampa,
+  doble_estampa,
+  envio_monto,
+  fecha_entrega,
+  factura
+} = req.body;
 
     if (!fecha || !cliente_id || !producto_id || !cantidad) {
       return res.status(400).json({ error: "Faltan datos obligatorios" });
@@ -105,10 +105,10 @@ if (doble_estampa) {
 }
 
 // 🔹 Envío separado
-let envio_monto = envio_domicilio ? 8000 : 0;
+const envioMonto = Number(envio_monto) || 0;
 
 // 🔹 Precio final real que paga el cliente
-const precio_final = precio_producto + envio_monto;
+const precio_final = precio_producto + envioMonto;
 
     // ================================
     // 2️⃣ OBTENER COSTO UNITARIO
@@ -167,7 +167,7 @@ await pool.query(
         color_bolsa,
         color_estampa,
         doble_estampa,
-        envio_domicilio,
+        envio_monto,
         precio_final,
         sena,
         restante,
@@ -190,7 +190,7 @@ await pool.query(
         color_bolsa,
         color_estampa,
         doble_estampa,
-        envio_domicilio,
+        envio_monto,
         precio_final,
         sena,
         restante,

@@ -178,10 +178,12 @@
       Doble
     </label>
 
-    <label class="flex items-center gap-2">
-      <input type="checkbox" id="envio_domicilio">
-      Envío
-    </label>
+    <input 
+  type="number"
+  id="envio_monto"
+  placeholder="Envío $"
+  class="border border-slate-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500"
+>
 
     <input type="number" id="precio_final" readonly placeholder="Precio final" class="input bg-slate-100">
 
@@ -379,7 +381,8 @@ window.filtrarClientes = function() {
   let precio = Number(pack.precio_total);
 
   const doble = document.getElementById("doble_estampa").checked;
-  const envio = document.getElementById("envio_domicilio").checked;
+  const envio = Number(document.getElementById("envio_monto").value) || 0;
+
 
   // 🔹 Doble estampa suma 50%
   if (doble) {
@@ -387,9 +390,7 @@ window.filtrarClientes = function() {
   }
 
   // 🔹 Envío suma $8000 fijo
-  if (envio) {
-    precio += 8000;
-  }
+  precio += envio;
 
   document.getElementById("precio_final").value = precio;
 }
@@ -494,7 +495,15 @@ const gananciaNetaMes = mes.ventas.reduce(
       <td>${v.color_bolsa}</td>
       <td>${v.color_estampa}</td>
       <td>${v.doble_estampa ? "SI" : "NO"}</td>
-      <td>${v.envio_domicilio ? "SI" : "NO"}</td>
+      <td>
+${
+  v.envio_monto > 0
+    ? v.envio_monto <= 8000
+      ? `<span title="Envío en Buenos Aires">🚗 $${formatearPesos(v.envio_monto)}</span>`
+      : `<span title="Envío a otra provincia">✈️ $${formatearPesos(v.envio_monto)}</span>`
+    : "-"
+}
+</td>
       <td>$${formatearPesos(v.precio_final)}</td>
       <td>$${formatearPesos(v.sena)}</td>
       <td>$${formatearPesos(v.restante)}</td>
@@ -692,22 +701,22 @@ document.getElementById("filtro-mes").addEventListener("change", calcularTotales
 
   document.getElementById("cantidad").addEventListener("change", calcularPrecioPack);
 document.getElementById("doble_estampa").addEventListener("change", calcularPrecioPack);
-document.getElementById("envio_domicilio").addEventListener("change", calcularPrecioPack);
+document.getElementById("envio_monto").addEventListener("input", calcularPrecioPack);
   document.getElementById("form-venta").addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const nuevaVenta = {
-      fecha: document.getElementById("fecha").value,
-      cliente_id: clienteSeleccionadoId,
-      producto_id: parseInt(document.getElementById("producto").value),
-      cantidad: parseInt(document.getElementById("cantidad").value),
-      color_bolsa: document.getElementById("color_bolsa").value,
-      color_estampa: document.getElementById("color_estampa").value,
-      doble_estampa: document.getElementById("doble_estampa").checked,
-      envio_domicilio: document.getElementById("envio_domicilio").checked,
-      fecha_entrega: document.getElementById("fecha_entrega").value,
-      factura: false
-    };
+  fecha: document.getElementById("fecha").value,
+  cliente_id: clienteSeleccionadoId,
+  producto_id: parseInt(document.getElementById("producto").value),
+  cantidad: parseInt(document.getElementById("cantidad").value),
+  color_bolsa: document.getElementById("color_bolsa").value,
+  color_estampa: document.getElementById("color_estampa").value,
+  doble_estampa: document.getElementById("doble_estampa").checked,
+  envio_monto: Number(document.getElementById("envio_monto").value) || 0,
+  fecha_entrega: document.getElementById("fecha_entrega").value,
+  factura: false
+};
 
     await fetch("/ventas", {
       method: "POST",
