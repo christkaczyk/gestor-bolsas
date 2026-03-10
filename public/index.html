@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Gestor de Bolsas</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="/theme-light.css">
   
 </head>
@@ -1771,42 +1772,93 @@ let totalBolsas = 0;
 
 let tamanos = {};
 let colores = {};
+let meses = {};
 
 let envioAuto = 0;
 let envioCorreo = 0;
 
-ventasGlobal.forEach(v => {
+ventasGlobal.forEach(v=>{
 
 totalBolsas += Number(v.cantidad);
 
 const tamano = `${v.tamano} ${v.tipo_asa}`;
 
-if(!tamanos[tamano]) tamanos[tamano] = 0;
-tamanos[tamano] += Number(v.cantidad);
+if(!tamanos[tamano]) tamanos[tamano]=0;
+tamanos[tamano]+=Number(v.cantidad);
 
 const color = v.color_bolsa || "Sin color";
 
-if(!colores[color]) colores[color] = 0;
-colores[color] += Number(v.cantidad);
+if(!colores[color]) colores[color]=0;
+colores[color]+=Number(v.cantidad);
 
-if(v.envio_monto > 0){
+const fecha = new Date(v.fecha);
+const mes = fecha.toLocaleString("es-AR",{month:"short"})+" "+fecha.getFullYear();
 
-if(v.envio_monto <= 8000){
-envioAuto++;
-}else{
-envioCorreo++;
-}
+if(!meses[mes]) meses[mes]=0;
+meses[mes]+=Number(v.cantidad);
+
+if(v.envio_monto>0){
+
+if(v.envio_monto<=8000) envioAuto++;
+else envioCorreo++;
 
 }
 
 });
 
-document.getElementById("statTotalBolsas").innerText = totalBolsas;
-document.getElementById("statEnvioAuto").innerText = envioAuto;
-document.getElementById("statEnvioCorreo").innerText = envioCorreo;
+document.getElementById("statTotalBolsas").innerText=totalBolsas;
+document.getElementById("statEnvioAuto").innerText=envioAuto;
+document.getElementById("statEnvioCorreo").innerText=envioCorreo;
 
-renderRanking("statTamanos", tamanos, totalBolsas);
-renderRanking("statColores", colores, totalBolsas);
+crearGraficoMes(meses);
+crearGraficoPie("tamanoChart",tamanos);
+crearGraficoPie("colorChart",colores);
+
+}
+
+function crearGraficoMes(data){
+
+const ctx = document.getElementById("mesChart");
+
+const labels = Object.keys(data);
+const values = Object.values(data);
+
+new Chart(ctx,{
+type:"bar",
+data:{
+labels:labels,
+datasets:[{
+label:"Bolsas",
+data:values
+}]
+},
+options:{
+plugins:{legend:{display:false}}
+}
+});
+
+}
+
+function crearGraficoPie(canvasId,data){
+
+const ctx = document.getElementById(canvasId);
+
+const ordenado = Object.entries(data)
+.sort((a,b)=>b[1]-a[1])
+.slice(0,6);
+
+const labels = ordenado.map(i=>i[0]);
+const values = ordenado.map(i=>i[1]);
+
+new Chart(ctx,{
+type:"pie",
+data:{
+labels:labels,
+datasets:[{
+data:values
+}]
+}
+});
 
 }
 
@@ -1839,6 +1891,13 @@ container.appendChild(div);
 
 }
 
+function toggleStats(id){
+
+const el = document.getElementById(id);
+
+el.classList.toggle("hidden");
+
+}
 
 </script>
 
@@ -2122,44 +2181,67 @@ container.appendChild(div);
 
 <div id="modalEstadisticas" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
 
-<div class="bg-white w-[700px] rounded-2xl shadow-xl p-6">
+<div class="bg-white w-[750px] max-h-[85vh] rounded-2xl shadow-xl p-6 flex flex-col">
 
 <div class="flex justify-between items-center mb-4">
 <h2 class="text-xl font-semibold">Estadísticas</h2>
-
 <button onclick="cerrarModalEstadisticas()" class="text-slate-500 text-xl">✕</button>
 </div>
 
-<div class="grid grid-cols-2 gap-4 text-sm">
+<div class="overflow-y-auto pr-2 space-y-6">
+
+<!-- RESUMEN -->
+<div class="grid grid-cols-3 gap-4 text-sm">
 
 <div class="bg-slate-100 p-3 rounded-lg">
-<div class="text-slate-500">Bolsas vendidas (total)</div>
-<div id="statTotalBolsas" class="font-bold text-lg">0</div>
-</div>
-
-<div class="bg-slate-100 p-3 rounded-lg">
-<div class="text-slate-500">Envíos en auto</div>
-<div id="statEnvioAuto" class="font-bold text-lg">0</div>
+<div class="text-slate-500">Bolsas vendidas</div>
+<div id="statTotalBolsas" class="font-bold text-lg"></div>
 </div>
 
 <div class="bg-slate-100 p-3 rounded-lg">
-<div class="text-slate-500">Envíos por correo</div>
-<div id="statEnvioCorreo" class="font-bold text-lg">0</div>
+<div class="text-slate-500">Envios Auto</div>
+<div id="statEnvioAuto" class="font-bold text-lg"></div>
+</div>
+
+<div class="bg-slate-100 p-3 rounded-lg">
+<div class="text-slate-500">Envios Correo</div>
+<div id="statEnvioCorreo" class="font-bold text-lg"></div>
 </div>
 
 </div>
 
-<div class="mt-6">
+<!-- BOLSAS POR MES -->
+<div>
 
-<h3 class="font-semibold mb-2">Tamaños más vendidos</h3>
-<div id="statTamanos"></div>
+<button onclick="toggleStats('mesChart')" class="font-semibold mb-2">
+Bolsas vendidas por mes
+</button>
+
+<canvas id="mesChart" class="hidden"></canvas>
 
 </div>
 
-<div class="mt-6">
+<!-- TAMAÑOS -->
+<div>
 
-<h3 class="font-semibold mb-2">Colores más pedidos</h3>
-<div id="statColores"></div>
+<button onclick="toggleStats('tamanoChart')" class="font-semibold mb-2">
+Top tamaños
+</button>
+
+<canvas id="tamanoChart" class="hidden"></canvas>
+
+</div>
+
+<!-- COLORES -->
+<div>
+
+<button onclick="toggleStats('colorChart')" class="font-semibold mb-2">
+Colores de bolsa
+</button>
+
+<canvas id="colorChart" class="hidden"></canvas>
+
+</div>
 
 </div>
 
