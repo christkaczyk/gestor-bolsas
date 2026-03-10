@@ -507,7 +507,14 @@ ${
       <td>$${formatearPesos(v.precio_final)}</td>
       <td>$${formatearPesos(v.sena)}</td>
       <td>$${formatearPesos(v.restante)}</td>
-      <td>${formatearFecha(v.fecha_entrega)}</td>
+      <td>
+  <input
+    type="date"
+    value="${v.fecha_entrega ? v.fecha_entrega.split("T")[0] : ""}"
+    onchange="actualizarFechaEntrega(${v.id}, this.value)"
+    class="border rounded px-1 py-1 text-xs"
+  >
+</td>
       <td>$${formatearPesos(v.costo_total)}</td>
       <td>$${formatearPesos(v.ganancia_total)}</td>
       <td>$${formatearPesos(v.ganancia_taller)}</td>
@@ -1502,16 +1509,18 @@ async function generarResumen() {
     texto += `${i+1}) ${cantidad}u - ${productoTexto} - Bolsa: ${colorBolsa} - Estampa: ${colorEstampa} - Doble Estampa: ${doble ? "Sí" : "No"}\n\n`;
   }
 
-  const envio = document.getElementById("presupuestoEnvio").value === "true";
+  const envioMonto = Number(
+  document.getElementById("presupuestoEnvioMonto").value
+) || 0;
 
-if (envio) {
-  totalGeneral += 8000;
-  texto += `Envío: Sí (+$8.000)\n\n`;
-  texto += `TOTAL GENERAL + ENVÍO: $${formatearPesos(totalGeneral)}\n`;
+if (envioMonto > 0) {
+  totalGeneral += envioMonto;
+  texto += `Envío: $${formatearPesos(envioMonto)}\n\n`;
 } else {
   texto += `Envío: No\n\n`;
-  texto += `TOTAL GENERAL: $${formatearPesos(totalGeneral)}\n`;
 }
+
+texto += `TOTAL GENERAL: $${formatearPesos(totalGeneral)}\n`;
 
   
 
@@ -1649,6 +1658,33 @@ function copiarPablo() {
 
   alert("Copiado al portapapeles");
 }
+
+window.actualizarFechaEntrega = async function(id, fecha) {
+
+  try {
+
+    const res = await fetch(`/ventas/${id}/fecha-entrega`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        fecha_entrega: fecha
+      })
+    });
+
+    if (!res.ok) {
+      alert("Error al actualizar fecha");
+      return;
+    }
+
+    await cargarVentas();
+
+  } catch (error) {
+    console.error(error);
+  }
+
+};
 
 </script>
 
@@ -1845,11 +1881,14 @@ function copiarPablo() {
     </button>
 
     <div class="mt-4">
-      <label>Envío</label>
-      <select id="presupuestoEnvio" class="w-full border rounded px-2 py-1">
-        <option value="false">No</option>
-        <option value="true">Sí</option>
-      </select>
+      <label class="block text-sm font-semibold mt-2">Envío</label>
+
+<input
+  type="number"
+  id="presupuestoEnvioMonto"
+  placeholder="Costo de envío $"
+  class="w-full border rounded px-3 py-2"
+/>
     </div>
 
     <div class="mt-4">
