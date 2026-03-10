@@ -249,11 +249,12 @@
 </div>
 
 <script>
+  let ventasGlobal = [];
+  let packsGlobal = [];
 document.addEventListener("DOMContentLoaded", async () => {
 
 
-let ventasGlobal = [];
-  let packsGlobal = [];
+
 
   window.formatearFecha = function(fechaISO) {
   if (!fechaISO) return "";
@@ -1686,6 +1687,61 @@ window.actualizarFechaEntrega = async function(id, fecha) {
 
 };
 
+function cargarPedidoDesdeVentas() {
+
+  const compras = ventasGlobal.filter(v => v.etapa === "comprar");
+
+  if (compras.length === 0) {
+    alert("No hay pedidos marcados para comprar");
+    return;
+  }
+
+  const container = document.getElementById("pabloItems");
+  container.innerHTML = "";
+
+  compras.forEach(v => {
+
+    const div = document.createElement("div");
+    div.className = "border p-3 rounded space-y-2";
+
+    div.innerHTML = `
+<select class="pabloProducto w-full border rounded px-3 py-2"></select>
+
+<select class="pabloCantidad w-full border rounded px-3 py-2">
+  <option value="${v.cantidad}" selected>${v.cantidad}</option>
+</select>
+
+<select class="pabloColor w-full border rounded px-3 py-2">
+  <option value="">Color bolsa</option>
+  <option ${v.color_bolsa === "Negro" ? "selected" : ""}>Negro</option>
+  <option ${v.color_bolsa === "Blanco" ? "selected" : ""}>Blanco</option>
+  <option ${v.color_bolsa === "Crudo" ? "selected" : ""}>Crudo</option>
+</select>
+`;
+
+    container.appendChild(div);
+
+    const selectProducto = div.querySelector(".pabloProducto");
+
+    productosPablo.forEach(p => {
+
+      const option = document.createElement("option");
+
+      option.value = p.id;
+      option.textContent = `${p.tamano} ${p.tipo_asa}`;
+
+      if (`${p.tamano} ${p.tipo_asa}` === `${v.tamano} ${v.tipo_asa}`) {
+        option.selected = true;
+      }
+
+      selectProducto.appendChild(option);
+
+    });
+
+  });
+
+}
+
 </script>
 
 
@@ -1926,6 +1982,12 @@ window.actualizarFechaEntrega = async function(id, fecha) {
 
     <!-- Acá se agregan los productos dinámicamente -->
     <div id="pabloItems" class="space-y-3"></div>
+
+<button
+  onclick="cargarPedidoDesdeVentas()"
+  class="bg-blue-600 text-white px-4 py-2 rounded-lg">
+  Cargar Pedido
+</button>
 
     <!-- Botón agregar producto -->
     <button onclick="agregarProductoPablo()"
