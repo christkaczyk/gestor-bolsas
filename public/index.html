@@ -509,7 +509,13 @@ ${
   v.envio_monto > 0
     ? v.envio_monto <= 8000
       ? `<span title="Envío en Buenos Aires">🚗 $${formatearPesos(v.envio_monto)}</span>`
-      : `<span title="Envío a otra provincia">✈️ $${formatearPesos(v.envio_monto)}</span>`
+      : `<span 
+     title="Envío a otra provincia"
+     class="cursor-pointer"
+     onclick="abrirModalSeguimiento(${v.id}, '${v.codigo_seguimiento || ""}')"
+   >
+     ✈️ $${formatearPesos(v.envio_monto)}
+   </span>`
     : "-"
 }
 </td>
@@ -1899,6 +1905,49 @@ el.classList.toggle("hidden");
 
 }
 
+let ventaSeguimientoId = null;
+
+function abrirModalSeguimiento(id, codigo) {
+
+  ventaSeguimientoId = id;
+
+  document.getElementById("inputSeguimiento").value = codigo || "";
+
+  document.getElementById("modalSeguimiento").classList.remove("hidden");
+  document.getElementById("modalSeguimiento").classList.add("flex");
+}
+
+function cerrarModalSeguimiento() {
+
+  document.getElementById("modalSeguimiento").classList.add("hidden");
+}
+
+async function guardarSeguimiento() {
+
+  const codigo = document.getElementById("inputSeguimiento").value;
+
+  await fetch(`/ventas/${ventaSeguimientoId}/seguimiento`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ codigo })
+  });
+
+  cerrarModalSeguimiento();
+
+  cargarVentas();
+}
+
+function abrirCorreo() {
+
+  window.open(
+    "https://www.correoargentino.com.ar/formularios/e-commerce",
+    "_blank"
+  );
+
+}
+
 </script>
 
 
@@ -2243,6 +2292,51 @@ Colores de bolsa
 
 </div>
 
+</div>
+
+</div>
+</div>
+
+<!-- MODAL SEGUIMIENTO -->
+<div id="modalSeguimiento"
+class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+
+<div class="bg-white rounded-xl p-6 w-[400px] space-y-4">
+
+<h2 class="text-lg font-semibold">
+Código de seguimiento
+</h2>
+
+<input
+id="inputSeguimiento"
+type="text"
+placeholder="Ej: CP123456789AR"
+class="w-full border rounded px-3 py-2"
+/>
+
+<div class="flex justify-between">
+
+<button
+onclick="abrirCorreo()"
+class="bg-blue-500 text-white px-3 py-2 rounded">
+Correo Argentino
+</button>
+
+<div class="flex gap-2">
+
+<button
+onclick="cerrarModalSeguimiento()"
+class="bg-gray-300 px-3 py-2 rounded">
+Cancelar
+</button>
+
+<button
+onclick="guardarSeguimiento()"
+class="bg-green-600 text-white px-3 py-2 rounded">
+Guardar
+</button>
+
+</div>
 </div>
 
 </div>

@@ -753,3 +753,26 @@ app.put("/ventas/:id/fecha-entrega", async (req, res) => {
     res.status(500).json({ error: "Error al actualizar fecha de entrega" });
   }
 });
+
+// Guardar código de seguimiento
+app.put("/ventas/:id/seguimiento", async (req, res) => {
+  try {
+
+    const { id } = req.params;
+    const { codigo } = req.body;
+
+    const result = await pool.query(
+      `UPDATE ventas
+       SET codigo_seguimiento = $1
+       WHERE id = $2
+       RETURNING *`,
+      [codigo, id]
+    );
+
+    res.json(result.rows[0]);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error al guardar seguimiento" });
+  }
+});
