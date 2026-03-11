@@ -257,6 +257,85 @@
 </div>
 
 <script>
+  let sumaActiva = false;
+let sumaTotal = 0;
+let tooltipSuma = null;
+
+function crearTooltip() {
+
+  tooltipSuma = document.createElement("div");
+
+  tooltipSuma.style.position = "fixed";
+  tooltipSuma.style.pointerEvents = "none";
+  tooltipSuma.style.background = "#111";
+  tooltipSuma.style.color = "white";
+  tooltipSuma.style.padding = "6px 10px";
+  tooltipSuma.style.borderRadius = "6px";
+  tooltipSuma.style.fontSize = "14px";
+  tooltipSuma.style.fontWeight = "bold";
+  tooltipSuma.style.zIndex = "9999";
+  tooltipSuma.style.boxShadow = "0 4px 10px rgba(0,0,0,0.3)";
+
+  tooltipSuma.innerText = "$0";
+
+  document.body.appendChild(tooltipSuma);
+}
+
+document.addEventListener("mousemove", (e) => {
+
+  if (!sumaActiva || !tooltipSuma) return;
+
+  tooltipSuma.style.left = (e.clientX + 15) + "px";
+  tooltipSuma.style.top = (e.clientY + 15) + "px";
+
+});
+
+document.addEventListener("click", function(e){
+
+  if(!e.ctrlKey) return;
+
+  const celda = e.target;
+
+  if(!celda.innerText.includes("$")) return;
+
+  const numero = Number(
+    celda.innerText
+      .replace("$","")
+      .replace(/\./g,"")
+      .replace(",",".")
+  );
+
+  if(isNaN(numero)) return;
+
+  if(!sumaActiva){
+    sumaActiva = true;
+    sumaTotal = 0;
+    crearTooltip();
+  }
+
+  sumaTotal += numero;
+
+  tooltipSuma.innerText =
+    "$" + new Intl.NumberFormat("es-AR").format(sumaTotal);
+
+});
+
+document.addEventListener("keyup", (e)=>{
+
+  if(e.key !== "Control") return;
+
+  sumaActiva = false;
+  sumaTotal = 0;
+
+  if(tooltipSuma){
+    tooltipSuma.remove();
+    tooltipSuma = null;
+  }
+
+});
+
+
+
   let ventasGlobal = [];
   let packsGlobal = [];
 document.addEventListener("DOMContentLoaded", async () => {
