@@ -56,7 +56,18 @@
 </div>
 
   </div>
-<div class="flex justify-end mb-6">
+  <div class="bg-white p-6 rounded-xl shadow">
+
+  <div class="flex justify-between items-center mb-3">
+    <span class="font-semibold text-slate-700">
+      Facturación vs Ganancia
+    </span>
+  </div>
+
+  <canvas id="graficoFacturacion" height="180"></canvas>
+
+</div>
+<div class="grid grid-cols-2 gap-6 mb-6">
   <div class="w-[450px]">
     <div class="bg-white p-4 rounded-xl shadow">
     <div class="flex justify-between items-center mb-3">
@@ -67,22 +78,27 @@
       </select>
     </div>
 
-    <div class="grid grid-cols-3 gap-3 text-sm">
+    <div class="grid grid-cols-4 gap-3 text-sm">
 
   <div class="bg-slate-100 p-3 rounded-lg">
-    <div class="text-slate-500">Bruta</div>
+    <div class="text-slate-500">Ganancia Bruta</div>
     <div id="total-bruta" class="font-bold">$0</div>
   </div>
 
   <div class="bg-amber-100 p-3 rounded-lg">
-    <div class="text-amber-700">Taller</div>
+    <div class="text-amber-700">Ganancia Taller</div>
     <div id="total-taller" class="font-bold">$0</div>
   </div>
 
   <div class="bg-green-100 p-3 rounded-lg">
-    <div class="text-green-700">Neta</div>
+    <div class="text-green-700">Ganancia Neta</div>
     <div id="total-neta" class="font-bold">$0</div>
   </div>
+
+  <div class="bg-emerald-100 p-3 rounded-lg">
+  <div class="text-emerald-700">Facturación</div>
+  <div id="total-facturacion" class="font-bold">$0</div>
+</div>
 
   <!-- NUEVAS MÉTRICAS -->
 
@@ -104,7 +120,7 @@
 </div>
 
   </div>
-  <div class="bg-white p-4 rounded-xl shadow">
+  
   <!-- CONTADORES -->
     <div class="text-sm font-semibold flex justify-between mb-2">
       <span class="text-red-600">
@@ -335,7 +351,7 @@ document.addEventListener("keyup", (e)=>{
 });
 
 
-
+let graficoFacturacion = null;
   let ventasGlobal = [];
   let packsGlobal = [];
 document.addEventListener("DOMContentLoaded", async () => {
@@ -487,8 +503,91 @@ window.filtrarClientes = function() {
     const res = await fetch("/ventas");
     const ventas = await res.json();
     ventasGlobal = ventas;
+    crearGraficoFacturacion();
 cargarFiltroMeses();
 calcularTotales();
+function crearGraficoFacturacion() {
+
+  const ventasPorMes = {};
+
+  ventasGlobal.forEach(v => {
+
+    const fecha = new Date(v.fecha);
+
+    const mes = fecha.toLocaleString("es-AR", { month: "short" });
+
+    if(!ventasPorMes[mes]){
+      ventasPorMes[mes] = {
+        facturacion: 0,
+        ganancia: 0
+      };
+    }
+
+    ventasPorMes[mes].facturacion += Number(v.precio_final);
+    ventasPorMes[mes].ganancia += Number(v.ganancia_personal);
+
+  });
+
+  const labels = Object.keys(ventasPorMes);
+
+  const facturacion = labels.map(m => ventasPorMes[m].facturacion);
+  const ganancia = labels.map(m => ventasPorMes[m].ganancia);
+
+  const ctx = document.getElementById("graficoFacturacion");
+
+  if(graficoFacturacion){
+    graficoFacturacion.destroy();
+  }
+
+  graficoFacturacion = new Chart(ctx, {
+
+    type: "bar",
+
+    data: {
+      labels: labels,
+
+      datasets: [
+
+        {
+          label: "Facturación",
+          data: facturacion,
+          backgroundColor: "#22c55e"
+        },
+
+        {
+          label: "Ganancia",
+          data: ganancia,
+          backgroundColor: "#3b82f6"
+        }
+
+      ]
+    },
+
+    options: {
+
+      responsive: true,
+
+      plugins: {
+        legend: {
+          position: "top"
+        }
+      },
+
+      scales: {
+        y: {
+          ticks: {
+            callback: function(value){
+              return "$" + new Intl.NumberFormat("es-AR").format(value);
+            }
+          }
+        }
+      }
+
+    }
+
+  });
+
+}
 actualizarContadores();
     const tabla = document.getElementById("tabla-ventas");
     tabla.innerHTML = "";
@@ -558,6 +657,7 @@ const gananciaNetaMes = mes.ventas.reduce(
   mes.ventas.forEach(v => {
 
     const fila = document.createElement("tr");
+    
 
     let colorEstado = "";
 
@@ -683,8 +783,9 @@ headerRow.addEventListener("click", () => {
   window.cargarVentas = cargarVentas;
 
 function cargarFiltroMeses() {
+
   const select = document.getElementById("filtro-mes");
-  select.innerHTML = '<option value="todos">Todos los meses</option>';
+  select.innerHTML = "";
 
   const meses = new Set();
 
@@ -694,14 +795,46 @@ function cargarFiltroMeses() {
     meses.add(clave);
   });
 
-  meses.forEach(m => {
-    const [year, month] = m.split("-");
-    const nombreMes = new Date(year, month).toLocaleString("es-AR", { month: "long" });
+  const mesesArray = Array.from(meses);
+
+  // ordenar por fecha
+  mesesArray.sort((a,b) => {
+
+    const [yA,mA] = a.split("-");
+    const [yB,mB] = b.split("-");
+
+    return new Date(yB,mB) - new Date(yA,mA);
+
+  });
+
+  // 🔥 último mes como primera opción
+  mesesArray.forEach((m,index) => {
+
+    const [year,month] = m.split("-");
+
+    const nombreMes = new Date(year, month)
+      .toLocaleString("es-AR",{month:"long"});
+
     const option = document.createElement("option");
+
     option.value = m;
     option.textContent = `${nombreMes} ${year}`;
+
+    // seleccionar el más reciente
+    if(index === 0){
+      option.selected = true;
+    }
+
     select.appendChild(option);
+
   });
+
+  // agregar "Todos los meses" al final
+  const optionTodos = document.createElement("option");
+  optionTodos.value = "todos";
+  optionTodos.textContent = "Todos los meses";
+  select.appendChild(optionTodos);
+
 }
 
 function calcularTotales() {
@@ -722,10 +855,16 @@ function calcularTotales() {
   const totalBruta = filtradas.reduce((acc, v) => acc + Number(v.ganancia_total), 0);
   const totalTaller = filtradas.reduce((acc, v) => acc + Number(v.ganancia_taller), 0);
   const totalNeta = filtradas.reduce((acc, v) => acc + Number(v.ganancia_personal), 0);
+  const totalFacturacion = filtradas.reduce(
+  (acc, v) => acc + Number(v.precio_final),
+  0
+);
 
   document.getElementById("total-bruta").innerText = "$" + formatearPesos(totalBruta);
   document.getElementById("total-taller").innerText = "$" + formatearPesos(totalTaller);
   document.getElementById("total-neta").innerText = "$" + formatearPesos(totalNeta);
+  document.getElementById("total-facturacion").innerText =
+  "$" + formatearPesos(totalFacturacion);
 
   // 🔹 CANTIDAD TOTAL DE BOLSAS
   const totalBolsas = filtradas.reduce((acc, v) => acc + Number(v.cantidad), 0);
