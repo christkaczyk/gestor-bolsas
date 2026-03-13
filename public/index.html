@@ -254,10 +254,32 @@
           <th class="px-3 py-2">Envío</th>
           <th class="px-3 py-2">Precio</th>
           <th class="px-3 py-2">Seña</th>
-          <th class="px-3 py-2">Restante</th>
+          <th class="px-3 py-2 text-center">
+  <div class="flex flex-col items-center gap-1">
+
+    <button onclick="sumarRestantes()" 
+    class="bg-green-500 hover:bg-green-600 text-white w-5 h-5 rounded text-xs font-bold leading-none">
+      +
+    </button>
+
+    <span>Restante</span>
+
+  </div>
+</th>
           <th class="px-3 py-2">Entrega</th>
           <th class="px-3 py-2">Costo</th>
-          <th class="px-3 py-2">Ganancia</th>
+          <th class="px-3 py-2 text-center">
+  <div class="flex flex-col items-center gap-1">
+
+    <button onclick="sumarGanancias()" 
+    class="bg-green-500 hover:bg-green-600 text-white w-5 h-5 rounded text-xs font-bold leading-none">
+      +
+    </button>
+
+    <span>Ganancia</span>
+
+  </div>
+</th>
           <th class="px-3 py-2">Taller</th>
           <th class="px-3 py-2">Neta</th>
           <th class="px-3 py-2">ARCA</th>
@@ -2162,6 +2184,52 @@ function abrirCorreo() {
   window.open(
     "https://www.correoargentino.com.ar/formularios/e-commerce",
     "_blank"
+  );
+
+}
+
+window.sumarRestantes = function(){
+
+  let total = 0;
+
+  ventasGlobal.forEach(v => {
+
+    if(
+      v.etapa === "comprar" ||
+      v.etapa === "sena" ||
+      v.etapa === "terminado"
+    ){
+      total += Number(v.restante);
+    }
+
+  });
+
+  alert(
+    "Total restante:\n\n$" +
+    new Intl.NumberFormat("es-AR").format(total)
+  );
+
+}
+
+window.sumarGanancias = function(){
+
+  let total = 0;
+
+  ventasGlobal.forEach(v => {
+
+    if(
+      v.etapa === "comprar" ||
+      v.etapa === "sena" ||
+      v.etapa === "terminado"
+    ){
+      total += Number(v.ganancia_total);
+    }
+
+  });
+
+  alert(
+    "Ganancia total:\n\n$" +
+    new Intl.NumberFormat("es-AR").format(total)
   );
 
 }
