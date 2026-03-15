@@ -672,7 +672,7 @@ const clientesUnicos = new Set(
       Ganancia neta: $${formatearPesos(gananciaNetaMes)}
     </span>
 
-    <span class="text-yellow-300 font-semibold">
+    <span class="text-sky-50 font-semibold">
       Clientes: ${clientesUnicos}
     </span>
 
@@ -898,8 +898,20 @@ function calcularTotales() {
   "$" + formatearPesos(totalFacturacion);
 
   // 🔹 CANTIDAD TOTAL DE BOLSAS
-  const totalBolsas = filtradas.reduce((acc, v) => acc + Number(v.cantidad), 0);
-  document.getElementById("total-bolsas").innerText = totalBolsas;
+  const bolsasHistoricas = 50000;
+
+let totalBolsas = filtradas.reduce(
+  (acc, v) => acc + Number(v.cantidad),
+  0
+);
+
+// Solo sumar histórico si está seleccionado "todos"
+if (filtro === "todos") {
+  totalBolsas += bolsasHistoricas;
+}
+
+document.getElementById("total-bolsas").innerText = 
+  new Intl.NumberFormat("es-AR").format(totalBolsas);
 
   // 🔹 COLOR MÁS VENDIDO
   const conteoColores = {};
