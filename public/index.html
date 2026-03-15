@@ -649,26 +649,35 @@ const gananciaNetaMes = mes.ventas.reduce(
   0
 );
 
+// 🔥 Contar clientes únicos del mes
+const clientesUnicos = new Set(
+  mes.ventas.map(v => v.cliente_id)
+).size;
+
   // 🔹 HEADER DEL MES
   const headerRow = document.createElement("tr");
   headerRow.className = "fila-mes font-bold cursor-pointer";
 
   headerRow.innerHTML = `
-  <td colspan="21" class="px-3 py-2">
-    <div class="flex items-center gap-6">
+<td colspan="21" class="px-3 py-2">
+  <div class="flex items-center gap-6">
 
-      <span class="flecha">▼</span>
+    <span class="flecha">▼</span>
 
-      <span class="font-semibold">
-        ${mes.nombre}
-      </span>
+    <span class="font-semibold">
+      ${mes.nombre}
+    </span>
 
-      <span class="text-sky-50 font-semibold">
-        Ganancia neta: $${formatearPesos(gananciaNetaMes)}
-      </span>
+    <span class="text-sky-50 font-semibold">
+      Ganancia neta: $${formatearPesos(gananciaNetaMes)}
+    </span>
 
-    </div>
-  </td>
+    <span class="text-yellow-300 font-semibold">
+      Clientes: ${clientesUnicos}
+    </span>
+
+  </div>
+</td>
 `;
 
   tabla.appendChild(headerRow);
