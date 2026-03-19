@@ -49,6 +49,13 @@
   class="bg-slate-700 text-white px-4 py-2 rounded-lg shadow transition">
   Estadísticas
 </button>
+<div class="mt-2">
+  <button 
+    onclick="abrirModalRecap()"
+    class="bg-gradient-to-r from-purple-600 to-pink-500 text-white px-4 py-2 rounded-lg shadow transition">
+    RECAP MENSUAL
+  </button>
+</div>
 </div>
 </div>
 <div>
@@ -2255,6 +2262,64 @@ window.sumarGanancias = function(){
 
 }
 
+window.abrirModalRecap = function() {
+
+  const filtro = document.getElementById("filtro-mes").value;
+
+  let filtradas = ventasGlobal;
+
+  if (filtro !== "todos") {
+    filtradas = ventasGlobal.filter(v => {
+      const fecha = new Date(v.fecha);
+      const clave = `${fecha.getFullYear()}-${fecha.getMonth()}`;
+      return clave === filtro;
+    });
+  }
+
+  // 🔹 Bolsas vendidas
+  const bolsas = filtradas.reduce((acc, v) => acc + Number(v.cantidad), 0);
+
+  // 🔹 Clientes únicos
+  const clientes = new Set(filtradas.map(v => v.cliente_id)).size;
+
+  // 🔹 Color más vendido
+  const colores = {};
+  filtradas.forEach(v => {
+    const c = v.color_bolsa || "Sin color";
+    colores[c] = (colores[c] || 0) + Number(v.cantidad);
+  });
+
+  const colorTop = Object.keys(colores).reduce((a,b) => colores[a] > colores[b] ? a : b, "-");
+
+  // 🔹 Tamaño más vendido
+  const tamanos = {};
+  filtradas.forEach(v => {
+    const t = `${v.tamano} ${v.tipo_asa}`;
+    tamanos[t] = (tamanos[t] || 0) + Number(v.cantidad);
+  });
+
+  const tamanoTop = Object.keys(tamanos).reduce((a,b) => tamanos[a] > tamanos[b] ? a : b, "-");
+
+  // 🔹 Nombre del mes
+  const select = document.getElementById("filtro-mes");
+  const mesTexto = select.options[select.selectedIndex].text;
+
+  // 🔹 Pintar datos
+  document.getElementById("recap-bolsas").innerText = bolsas;
+  document.getElementById("recap-clientes").innerText = clientes;
+  document.getElementById("recap-color").innerText = colorTop;
+  document.getElementById("recap-tamano").innerText = tamanoTop;
+  document.getElementById("recap-mes").innerText = mesTexto;
+
+  // mostrar modal
+  document.getElementById("modal-recap").classList.remove("hidden");
+  document.getElementById("modal-recap").classList.add("flex");
+};
+
+window.cerrarModalRecap = function() {
+  document.getElementById("modal-recap").classList.add("hidden");
+};
+
 </script>
 
 
@@ -2647,6 +2712,53 @@ Guardar
 </div>
 
 </div>
+</div>
+<div id="modal-recap" class="hidden fixed inset-0 bg-black/70 z-50 items-center justify-center">
+
+  <div class="bg-gradient-to-br from-slate-900 via-purple-900 to-black 
+              text-white rounded-3xl shadow-2xl p-6
+              w-[360px] h-[640px] flex flex-col justify-between relative">
+ 
+    <!-- MÉTRICAS -->
+    <div class="flex flex-col gap-4 text-center">
+      <!-- MES CENTRADO -->
+  <div class="mb-2">
+    <p id="recap-mes" class="text-xs tracking-[0.3em] uppercase text-white/60"></p>
+  </div>
+      <div>
+        <p class="text-4xl font-bold" id="recap-bolsas">0</p>
+        <p class="text-sm opacity-70">Bolsas vendidas</p>
+      </div>
+
+      <div>
+        <p class="text-xl font-semibold" id="recap-tamano">-</p>
+        <p class="text-sm opacity-70">Tamaño más vendido</p>
+      </div>
+
+      <div>
+        <p class="text-xl font-semibold" id="recap-color">-</p>
+        <p class="text-sm opacity-70">Color más vendido</p>
+      </div>
+
+      <div>
+        <p class="text-3xl font-bold" id="recap-clientes">0</p>
+        <p class="text-sm opacity-70">Clientes únicos</p>
+      </div>
+
+    </div>
+
+    <!-- FOOTER -->
+    <div class="text-center text-xs opacity-60">
+      ZettaPrint • Gestión Inteligente
+    </div>
+
+    <!-- CERRAR -->
+    <button onclick="cerrarModalRecap()" 
+      class="absolute top-3 right-3 text-white text-xl">
+      ✕
+    </button>
+
+  </div>
 </div>
 
 </body>
