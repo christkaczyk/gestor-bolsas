@@ -769,7 +769,10 @@ ${
     : "-"
 }
 </td>
-      <td>$${formatearPesos(v.precio_final)}</td>
+      <td onclick="editarPrecio(this, ${v.id}, ${v.precio_final})"
+    class="cursor-pointer hover:bg-yellow-100">
+  $${formatearPesos(v.precio_final)}
+</td>
       <td>$${formatearPesos(v.sena)}</td>
       <td>$${formatearPesos(v.restante)}</td>
       <td>
@@ -2353,6 +2356,61 @@ window.cerrarModalRecap = function() {
   document.getElementById("modal-recap").classList.add("hidden");
 };
 
+window.editarPrecio = function(td, id, precioActual) {
+
+  // Evitar duplicar input
+  if (td.querySelector("input")) return;
+
+  const input = document.createElement("input");
+  input.type = "number";
+  input.value = precioActual;
+  input.className = "border px-1 py-1 w-24 text-sm";
+
+  td.innerHTML = "";
+  td.appendChild(input);
+
+  input.focus();
+
+  // Guardar al presionar Enter
+  input.addEventListener("keydown", async (e) => {
+    if (e.key === "Enter") {
+
+      const nuevoPrecio = Number(input.value);
+
+      if (!nuevoPrecio || nuevoPrecio <= 0) {
+        alert("Precio inválido");
+        return;
+      }
+
+      // 🔥 CONFIRMACIÓN
+      const confirmar = confirm(
+        `¿Seguro querés cambiar el precio de $${precioActual} a $${nuevoPrecio}?`
+      );
+
+      if (!confirmar) {
+        cargarVentas();
+        return;
+      }
+
+      // 🔥 UPDATE BACKEND
+      await fetch(`/ventas/${id}/precio`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          nuevo_precio: nuevoPrecio
+        })
+      });
+
+      // 🔥 RECARGAR TODO
+      cargarVentas();
+    }
+  });
+
+  // Cancelar si pierde foco
+  input.addEventListener("blur", () => {
+    cargarVentas();
+  });
+};
 </script>
 
 

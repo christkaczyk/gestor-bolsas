@@ -776,3 +776,59 @@ app.put("/ventas/:id/seguimiento", async (req, res) => {
     res.status(500).json({ error: "Error al guardar seguimiento" });
   }
 });
+
+app.put("/ventas/:id/precio", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nuevo_precio } = req.body;
+
+    // 1️⃣ Obtener venta actual
+    const ventaRes = await pool.query(
+      "SELECT cantidad, costo_total FROM ventas WHERE id = $1",
+      [id]
+    );
+
+    if (ventaRes.rows.length === 0) {
+      return res.status(404).json({ error: "Venta no encontrada" });
+    }
+
+    const venta = ventaRes.rows[0];
+
+    // 2️⃣ Recalcular valores
+    const precio_final = Number(nuevo_precio);
+    const sena = precio_final * 0.5;
+    const restante = precio_final - sena;
+
+    const ganancia_total = precio_final - venta.costo_total;
+    const ganancia_taller = ganancia_total * 0.05;
+    const ganancia_personal = ganancia_total - ganancia_taller;
+
+    // 3️⃣ Actualizar
+    const result = await pool.query(
+      `UPDATE ventas
+       SET precio_final=$1,
+           sena=$2,
+           restante=$3,
+           ganancia_total=$4,
+           ganancia_taller=$5,
+           ganancia_personal=$6
+       WHERE id=$7
+       RETURNING *`,
+      [
+        precio_final,
+        sena,
+        restante,
+        ganancia_total,
+        ganancia_taller,
+        ganancia_personal,
+        id
+      ]
+    );
+
+    res.json(result.rows[0]);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Error al actualizar precio" });
+  }
+});
