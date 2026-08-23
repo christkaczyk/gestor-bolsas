@@ -669,7 +669,14 @@ app.get("/productos", async (req, res) => {
     SELECT id, tamano, tipo_asa, costo_unitario
     FROM productos
     WHERE activo = true
-    ORDER BY tamano
+    ORDER BY
+  split_part(UPPER(tamano), 'X', 1)::integer,
+  split_part(UPPER(tamano), 'X', 2)::integer,
+  CASE
+    WHEN UPPER(tipo_asa) = 'RINON' THEN 1
+    WHEN UPPER(tipo_asa) = 'ASAS' THEN 2
+    ELSE 3
+  END
   `);
   res.json(result.rows);
 });
