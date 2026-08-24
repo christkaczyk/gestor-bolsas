@@ -1806,60 +1806,180 @@ async function generarResumen() {
 
   const itemsDivs = document.querySelectorAll("#itemsContainer > div");
 
-  let totalGeneral = 0;
+  let totalProductos = 0;
   let texto = "PEDIDOS:\n\n";
 
   for (let i = 0; i < itemsDivs.length; i++) {
 
     const productoId = itemsDivs[i].querySelector(".productoSelect").value;
-    const productoTexto = itemsDivs[i].querySelector(".productoSelect").selectedOptions[0].textContent;
 
-    const cantidadSelect = itemsDivs[i].querySelector(".cantidadSelect");
+    const productoTexto =
+      itemsDivs[i]
+        .querySelector(".productoSelect")
+        .selectedOptions[0]
+        .textContent;
+
+    const cantidadSelect =
+      itemsDivs[i].querySelector(".cantidadSelect");
+
     const cantidad = cantidadSelect.value;
-    let precio = Number(cantidadSelect.selectedOptions[0].dataset.precio);
 
-    const doble = itemsDivs[i].querySelector(".dobleSelect").value === "true";
+    let precio =
+      Number(cantidadSelect.selectedOptions[0].dataset.precio);
 
-    if (doble) precio *= 1.5;
+    const doble =
+      itemsDivs[i]
+        .querySelector(".dobleSelect")
+        .value === "true";
 
-    totalGeneral += precio;
+    if (doble) {
+      precio *= 1.5;
+    }
 
-    const colorBolsa = itemsDivs[i].querySelector(".colorBolsa").value;
-    const colorEstampa = itemsDivs[i].querySelector(".colorEstampa").value;
+    totalProductos += precio;
 
-    texto += `${i+1}) ${cantidad}u - ${productoTexto} - Bolsa: ${colorBolsa} - Estampa: ${colorEstampa} - Doble Estampa: ${doble ? "Sí" : "No"}\n\n`;
+    const colorBolsa =
+      itemsDivs[i].querySelector(".colorBolsa").value;
+
+    const colorEstampa =
+      itemsDivs[i].querySelector(".colorEstampa").value;
+
+    texto += `${i + 1}) ${cantidad}u - ${productoTexto} - Bolsa: ${colorBolsa} - Estampa: ${colorEstampa} - Doble Estampa: ${doble ? "Sí" : "No"}\n\n`;
   }
 
-  const envioMonto = Number(
-  document.getElementById("presupuestoEnvioMonto").value
-) || 0;
 
-if (envioMonto > 0) {
-  totalGeneral += envioMonto;
-  texto += `Envío: $${formatearPesos(envioMonto)}\n\n`;
-} else {
-  texto += `Envío: No\n\n`;
-}
+  // =========================
+  // ENVÍO
+  // =========================
 
-texto += `TOTAL GENERAL: $${formatearPesos(totalGeneral)}\n`;
+  const envioGratis =
+    document.getElementById("presupuestoEnvioGratis").checked;
 
-  
+  const envioMonto =
+    Number(
+      document.getElementById("presupuestoEnvioMonto").value
+    ) || 0;
+
+
+  let envioFinal = envioMonto;
+
+
+  if (envioGratis) {
+    envioFinal = 0;
+
+    texto += `Envío: GRATIS\n\n`;
+
+  } else if (envioMonto > 0) {
+
+    texto += `Envío: $${formatearPesos(envioMonto)}\n\n`;
+
+  } else {
+
+    texto += `Envío: No\n\n`;
+
+  }
+
+
+  // =========================
+  // TOTAL ANTES DEL DESCUENTO
+  // =========================
+
+  const subtotal = totalProductos + envioFinal;
+
+
+  // =========================
+  // DESCUENTO
+  // =========================
+
+  const descuento10 =
+    document.getElementById("presupuestoDescuento10").checked;
+
+  const descuento15 =
+    document.getElementById("presupuestoDescuento15").checked;
+
+
+  let porcentajeDescuento = 0;
+
+
+  if (descuento15) {
+
+    porcentajeDescuento = 15;
+
+  } else if (descuento10) {
+
+    porcentajeDescuento = 10;
+
+  }
+
+
+  const montoDescuento =
+    subtotal * (porcentajeDescuento / 100);
+
+
+  const totalGeneral =
+    subtotal - montoDescuento;
+
+
+  // =========================
+  // MOSTRAR DESCUENTO
+  // =========================
+
+  if (porcentajeDescuento > 0) {
+
+    texto += `Subtotal: $${formatearPesos(subtotal)}\n`;
+
+    texto += `${porcentajeDescuento}% DESCUENTO: -$${formatearPesos(montoDescuento)}\n\n`;
+
+  }
+
+
+  // =========================
+  // TOTAL FINAL
+  // =========================
+
+  texto += `TOTAL GENERAL: $${formatearPesos(totalGeneral)}\n`;
+
+
+  // =========================
+  // SEÑA Y RESTANTE
+  // =========================
 
   const sena = totalGeneral / 2;
+
   const restante = totalGeneral - sena;
+
+
   texto += `SEÑA: $${formatearPesos(sena)}\n`;
+
   texto += `RESTARÍAN: $${formatearPesos(restante)}\n\n`;
 
-const fechaISO = document.getElementById("presupuestoFechaEntrega").value;
 
-let fechaEntrega = "";
+  // =========================
+  // FECHA DE ENTREGA
+  // =========================
 
-if (fechaISO) {
-  const partes = fechaISO.split("-");
-  fechaEntrega = `${partes[2]}/${partes[1]}/${partes[0]}`;
-}
+  const fechaISO =
+    document.getElementById("presupuestoFechaEntrega").value;
+
+  let fechaEntrega = "";
+
+
+  if (fechaISO) {
+
+    const partes = fechaISO.split("-");
+
+    fechaEntrega =
+      `${partes[2]}/${partes[1]}/${partes[0]}`;
+
+  }
+
 
   texto += `Fecha de entrega: ${fechaEntrega}\n\n`;
+
+
+  // =========================
+  // DATOS BANCARIOS
+  // =========================
 
   texto += `📢 Datos para Transferencia Bancaria 📢
 📌 Banco: Banco Galicia
@@ -1868,12 +1988,46 @@ if (fechaISO) {
 A nombre de Christian Tkaczyk.
 ✅ Una vez realizada la transferencia, envíanos el comprobante por WhatsApp para confirmar tu pedido.`;
 
+
   document.getElementById("resumenPresupuesto").value = texto;
 }
 
+function seleccionarDescuento(porcentaje) {
+
+  const descuento10 =
+    document.getElementById("presupuestoDescuento10");
+
+  const descuento15 =
+    document.getElementById("presupuestoDescuento15");
+
+
+  if (porcentaje === 10 && descuento10.checked) {
+    descuento15.checked = false;
+  }
+
+
+  if (porcentaje === 15 && descuento15.checked) {
+    descuento10.checked = false;
+  }
+
+}
+
 function resetPresupuesto() {
+
   document.getElementById("itemsContainer").innerHTML = "";
+
   document.getElementById("resumenPresupuesto").value = "";
+
+  document.getElementById("presupuestoEnvioMonto").value = "";
+
+  document.getElementById("presupuestoEnvioGratis").checked = false;
+
+  document.getElementById("presupuestoDescuento10").checked = false;
+
+  document.getElementById("presupuestoDescuento15").checked = false;
+
+  document.getElementById("presupuestoFechaEntrega").value = "";
+
   agregarItem();
 }
 
@@ -2625,6 +2779,45 @@ window.editarPrecio = function(td, id, precioActual) {
   class="w-full border rounded px-3 py-2"
 />
     </div>
+
+    <div class="mt-4 space-y-2">
+
+  <label class="flex items-center gap-2 cursor-pointer">
+    <input
+      type="checkbox"
+      id="presupuestoEnvioGratis"
+      class="w-4 h-4"
+    >
+    <span class="text-sm font-semibold">
+      ENVÍO GRATIS
+    </span>
+  </label>
+
+  <label class="flex items-center gap-2 cursor-pointer">
+    <input
+      type="checkbox"
+      id="presupuestoDescuento10"
+      class="w-4 h-4"
+      onchange="seleccionarDescuento(10)"
+    >
+    <span class="text-sm font-semibold">
+      10% DESCUENTO
+    </span>
+  </label>
+
+  <label class="flex items-center gap-2 cursor-pointer">
+    <input
+      type="checkbox"
+      id="presupuestoDescuento15"
+      class="w-4 h-4"
+      onchange="seleccionarDescuento(15)"
+    >
+    <span class="text-sm font-semibold">
+      15% DESCUENTO
+    </span>
+  </label>
+
+</div>
 
     <div class="mt-4">
       <label>Fecha de entrega</label>
