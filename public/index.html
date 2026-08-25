@@ -39,166 +39,1279 @@
 .animate-pop {
   animation: pop 0.6s ease forwards;
 }
+
+/* ==========================================================
+   MENÚ HAMBURGUESA - DASHBOARD
+   ========================================================== */
+
+.header-top {
+  position: relative;
+  min-height: 320px;
+  border-radius: 22px;
+  padding: 20px;
+  overflow: visible;
+}
+
+/* CÍRCULO BLANCO DEL MENÚ */
+
+.header-menu-trigger {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+
+  width: 76px;
+  height: 76px;
+
+  border-radius: 50%;
+  border: none;
+
+  background: #ffffff;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  z-index: 70;
+
+  cursor: pointer;
+
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.16);
+
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.header-menu-trigger:hover {
+  transform: scale(1.04);
+
+  box-shadow:
+    0 10px 28px rgba(15, 23, 42, 0.22);
+}
+
+/* ICONO HAMBURGUESA */
+
+.header-menu-icon,
+.header-menu-icon::before,
+.header-menu-icon::after {
+
+  width: 34px;
+  height: 4px;
+
+  border-radius: 999px;
+
+  background: #111827;
+
+  display: block;
+}
+
+.header-menu-icon {
+  position: relative;
+}
+
+.header-menu-icon::before,
+.header-menu-icon::after {
+  content: "";
+  position: absolute;
+  left: 0;
+}
+
+.header-menu-icon::before {
+  top: -10px;
+}
+
+.header-menu-icon::after {
+  top: 10px;
+}
+
+/* CUANDO EL MENÚ ESTÁ ABIERTO */
+
+.header-menu-trigger.open .header-menu-icon {
+  background: transparent;
+}
+
+.header-menu-trigger.open .header-menu-icon::before {
+  transform: translateY(10px) rotate(45deg);
+}
+
+.header-menu-trigger.open .header-menu-icon::after {
+  transform: translateY(-10px) rotate(-45deg);
+}
+
+
+/* PANEL DEL MENÚ */
+
+.header-menu-panel {
+  position: absolute;
+
+  top: 105px;
+  left: 20px;
+
+  width: 285px;
+
+  padding: 22px 18px 20px;
+
+  border-radius: 24px;
+
+  background: rgba(255, 255, 255, 0.98);
+
+  box-shadow:
+    0 18px 45px rgba(15, 23, 42, 0.22);
+
+  z-index: 60;
+
+  opacity: 0;
+
+  visibility: hidden;
+
+  transform:
+    translateY(-8px)
+    scale(0.97);
+
+  transform-origin: top left;
+
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease,
+    visibility 0.2s ease;
+}
+
+.header-menu-panel.open {
+
+  opacity: 1;
+
+  visibility: visible;
+
+  transform:
+    translateY(0)
+    scale(1);
+}
+
+
+/* TÍTULO DEL MENÚ */
+
+.header-menu-title {
+
+  font-size: 21px;
+
+  font-weight: 800;
+
+  color: #0f172a;
+
+  padding:
+    4px
+    10px
+    16px;
+}
+
+
+/* BOTONES */
+
+.header-menu-items {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+.header-menu-item {
+
+  width: 100%;
+
+  border: none;
+
+  border-radius: 12px;
+
+  padding: 11px 14px;
+
+  text-align: left;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  color: #334155;
+
+  background: #f1f5f9;
+
+  cursor: pointer;
+
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease,
+    color 0.15s ease;
+}
+
+.header-menu-item:hover {
+
+  background: #e2e8f0;
+
+  transform: translateX(3px);
+}
+
+
+/* BOTONES PRINCIPALES */
+
+.header-menu-item.primary {
+
+  background: #6366f1;
+
+  color: white;
+}
+
+.header-menu-item.primary:hover {
+
+  background: #4f46e5;
+}
+
+
+/* INGRESOS / EGRESOS */
+
+.header-menu-item.green {
+
+  background: #16a34a;
+
+  color: white;
+}
+
+.header-menu-item.green:hover {
+
+  background: #15803d;
+}
+
+
+/* DASHBOARD */
+
+.header-dashboard {
+
+  margin-left: 245px;
+
+  display: grid;
+
+  grid-template-columns:
+    280px
+    minmax(420px, 1fr);
+
+  gap: 22px;
+
+  align-items: start;
+}
+
+
+/* TARJETA DEL GRÁFICO */
+
+.header-chart-card {
+
+  background:
+    rgba(255,255,255,0.88);
+
+  border-radius: 20px;
+
+  padding: 18px;
+
+  box-shadow:
+    0 8px 25px rgba(15,23,42,0.10);
+}
+
+
+/* TARJETA DEL RESUMEN */
+
+.header-summary-card {
+
+  background:
+    rgba(255,255,255,0.92);
+
+  border-radius: 20px;
+
+  padding: 18px;
+
+  box-shadow:
+    0 8px 25px rgba(15,23,42,0.10);
+}
+
+
+/* RESPONSIVE */
+
+@media (max-width: 1050px) {
+
+  .header-top {
+
+    min-height: auto;
+
+    padding-top: 112px;
+  }
+
+  .header-dashboard {
+
+    margin-left: 0;
+
+    grid-template-columns: 1fr;
+  }
+}
+
+.dashboard-title {
+  position: absolute;
+
+  top: 32px;
+  left: 115px;
+
+  margin: 0;
+
+  font-size: 28px;
+  font-weight: 800;
+
+  color: #0f172a;
+
+  z-index: 10;
+}
+
+/* ==========================================================
+   DASHBOARD PROFESIONAL
+   ========================================================== */
+
+.dashboard-header {
+
+  position: relative;
+
+  margin-bottom: 22px;
+
+}
+
+
+/* ENCABEZADO */
+
+.dashboard-heading {
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  margin-bottom: 18px;
+
+  padding-left: 105px;
+
+}
+
+
+.dashboard-heading-left h1 {
+
+  margin: 0;
+
+  font-size: 28px;
+
+  font-weight: 800;
+
+  color: #0f172a;
+
+}
+
+
+.dashboard-heading-left p {
+
+  margin-top: 4px;
+
+  font-size: 14px;
+
+  color: #64748b;
+
+}
+
+
+.dashboard-month {
+
+  background: white;
+
+  border: 1px solid #e2e8f0;
+
+  border-radius: 12px;
+
+  padding: 9px 13px;
+
+  font-size: 14px;
+
+  font-weight: 600;
+
+  color: #334155;
+
+  box-shadow:
+    0 3px 10px rgba(15,23,42,.06);
+
+}
+
+
+/* ==========================================================
+   KPIs
+   ========================================================== */
+
+.dashboard-kpis {
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, 1fr);
+
+  gap: 16px;
+
+  margin-bottom: 18px;
+
+}
+
+
+.dashboard-kpi {
+
+  position: relative;
+
+  background: white;
+
+  border-radius: 16px;
+
+  padding: 20px;
+
+  border: 1px solid #e2e8f0;
+
+  box-shadow:
+    0 5px 18px rgba(15,23,42,.06);
+
+  overflow: hidden;
+
+}
+
+
+.dashboard-kpi-label {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+
+.dashboard-kpi-value {
+
+  font-size: 25px;
+
+  font-weight: 800;
+
+  color: #0f172a;
+
+}
+
+
+.dashboard-kpi-sub {
+
+  margin-top: 7px;
+
+  font-size: 12px;
+
+  color: #94a3b8;
+
+}
+
+
+/* BARRA DECORATIVA */
+
+.dashboard-kpi::before {
+
+  content: "";
+
+  position: absolute;
+
+  left: 0;
+
+  top: 0;
+
+  width: 100%;
+
+  height: 4px;
+
+  background: #6366f1;
+
+}
+
+
+.dashboard-kpi.facturacion::before {
+
+  background: #10b981;
+
+}
+
+
+.dashboard-kpi.ganancia::before {
+
+  background: #22c55e;
+
+}
+
+
+.dashboard-kpi.profit::before {
+
+  background: #8b5cf6;
+
+}
+
+
+.dashboard-kpi.bolsas::before {
+
+  background: #3b82f6;
+
+}
+
+
+/* ==========================================================
+   GRÁFICO
+   ========================================================== */
+
+.dashboard-chart {
+
+  background: white;
+
+  border-radius: 18px;
+
+  border: 1px solid #e2e8f0;
+
+  padding: 22px;
+
+  box-shadow:
+    0 5px 18px rgba(15,23,42,.06);
+
+  margin-bottom: 18px;
+
+}
+
+
+.dashboard-section-header {
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  margin-bottom: 18px;
+
+}
+
+
+.dashboard-section-title {
+  font-size: 18px;
+  font-weight: 750;
+  color: #0f172a;
+}
+
+
+.dashboard-section-subtitle {
+  font-size: 13px;
+  color: #94a3b8;
+  margin-top: 3px;
+}
+
+/* ==========================================================
+   DROPDOWN - GRÁFICO FACTURACIÓN VS GANANCIA
+   ========================================================== */
+
+.dashboard-chart {
+  overflow: hidden;
+}
+
+.dashboard-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.dashboard-chart-arrow {
+  font-size: 20px;
+  color: #64748b;
+  transition: transform 0.2s ease;
+}
+
+.dashboard-chart.open .dashboard-chart-arrow {
+  transform: rotate(90deg);
+}
+
+.dashboard-chart-content {
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition:
+    max-height 0.3s ease,
+    opacity 0.2s ease,
+    margin-top 0.3s ease;
+}
+
+.dashboard-chart.open .dashboard-chart-content {
+  max-height: 400px;
+  opacity: 1;
+  margin-top: 18px;
+}
+
+
+/* ==========================================================
+   INFORMACIÓN INFERIOR
+   ========================================================== */
+
+.dashboard-bottom {
+
+  display: grid;
+
+  grid-template-columns:
+    1fr
+    1fr;
+
+  gap: 18px;
+
+}
+
+
+.dashboard-info-card {
+
+  background: white;
+
+  border-radius: 18px;
+
+  border: 1px solid #e2e8f0;
+
+  padding: 22px;
+
+  box-shadow:
+    0 5px 18px rgba(15,23,42,.06);
+
+}
+
+
+.dashboard-status-list {
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 12px;
+
+}
+
+
+.dashboard-status {
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  padding: 13px 15px;
+
+  border-radius: 12px;
+
+  background: #f8fafc;
+
+}
+
+
+.dashboard-status-label {
+  font-size: 14px;
+  color: #475569;
+}
+
+
+.dashboard-status-value {
+  font-size: 17px;
+  font-weight: 800;
+}
+
+
+/* ==========================================================
+   DESTACADOS
+   ========================================================== */
+
+.dashboard-highlight {
+
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  padding: 14px 0;
+
+  border-bottom: 1px solid #e2e8f0;
+
+}
+
+
+.dashboard-highlight:last-child {
+
+  border-bottom: none;
+
+}
+
+
+.dashboard-highlight-label {
+  font-size: 14px;
+  color: #64748b;
+}
+
+
+.dashboard-highlight-value {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+
+/* ==========================================================
+   RESPONSIVE
+   ========================================================== */
+
+@media (max-width: 1000px) {
+
+  .dashboard-kpis {
+
+    grid-template-columns:
+      repeat(2, 1fr);
+
+  }
+
+}
+
+
+@media (max-width: 700px) {
+
+  .dashboard-heading {
+
+    padding-left: 0;
+
+    padding-top: 90px;
+
+  }
+
+  .dashboard-kpis {
+
+    grid-template-columns: 1fr;
+
+  }
+
+  .dashboard-bottom {
+
+    grid-template-columns: 1fr;
+
+  }
+
+}
+
 </style>
 </head>
 <body class="bg-slate-100 p-6">
   
-<div class="header-top flex justify-between items-start mb-6">
+<div class="header-top bg-gradient-to-r from-pink-200 via-purple-200 to-blue-300 mb-6">
 
-  <div>
-    <h1 class="text-3xl font-bold text-slate-800">
-      Gestión de Ventas
-    </h1>
 
-    <div class="mt-2">
-  <button 
-  onclick="abrirModalPresupuesto()"
-  class="bg-indigo-600 text-white px-4 py-2 rounded-lg shadow transition">
-  Presupuesto
-</button>
-</div>
 
-<div class="mt-2">
-  <button onclick="abrirModalCopys()" class="bg-indigo-600 text-white px-4 py-2 rounded">
-  Copys
-</button>
-</div>
-<div class="mt-2">
-<button 
-  onclick="abrirModalConfig()" 
-  class="bg-indigo-600 text-white px-4 py-2 rounded-lg shadow transition">
-  Config
-</button>
-</div>
+  <!-- ==========================================
+       BOTÓN HAMBURGUESA
+       ========================================== -->
 
-<div class="mt-2">
   <button
-    onclick="window.location.href='/ingresos-egresos.html'"
-    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg shadow transition">
-    Ingresos / Egresos
-  </button>
-</div>
+    id="headerMenuTrigger"
+    class="header-menu-trigger"
+    type="button"
+    aria-label="Abrir menú"
+    aria-expanded="false"
+    onclick="toggleHeaderMenu()">
 
-<div class="mt-2">
-  
-<div class="mt-2">
-  <button
-    onclick="abrirModalRankingClientes()"
-    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg shadow transition">
-    Ranking Clientes
-  </button>
-</div>
+    <span class="header-menu-icon"></span>
 
-  <div class="mt-2">
-<button 
-  onclick="abrirModalEstadisticas()"
-  class="bg-indigo-600 text-white px-4 py-2 rounded-lg shadow transition">
-  Estadísticas
-</button>
-<div class="mt-2">
-  <button 
-    onclick="abrirModalRecap()"
-    class="bg-indigo-600 text-white px-4 py-2 rounded-lg shadow transition">
-    RECAP MENSUAL
   </button>
-</div>
-</div>
-</div>
-<div>
 
-</div>
+
+  <!-- ==========================================
+       MENÚ
+       ========================================== -->
+
+  <div
+  id="headerMenuPanel"
+  class="header-menu-panel">
+
+  <div class="header-menu-items">
+
+
+      <!-- PRESUPUESTO -->
+
+      <button
+        onclick="abrirModalPresupuesto(); cerrarHeaderMenu();"
+        class="header-menu-item primary">
+
+        Presupuesto
+
+      </button>
+
+
+      <!-- COPYS -->
+
+      <button
+        onclick="abrirModalCopys(); cerrarHeaderMenu();"
+        class="header-menu-item primary">
+
+        Copys
+
+      </button>
+
+
+      <!-- CONFIG -->
+
+      <button
+        onclick="abrirModalConfig(); cerrarHeaderMenu();"
+        class="header-menu-item primary">
+
+        Config
+
+      </button>
+
+
+      <!-- INGRESOS / EGRESOS -->
+
+      <button
+        onclick="window.location.href='/ingresos-egresos.html'"
+        class="header-menu-item green">
+
+        Ingresos / Egresos
+
+      </button>
+
+
+      <!-- RANKING CLIENTES -->
+
+      <button
+        onclick="abrirModalRankingClientes(); cerrarHeaderMenu();"
+        class="header-menu-item primary">
+
+        Ranking Clientes
+
+      </button>
+
+
+      <!-- ESTADÍSTICAS -->
+
+      <button
+        onclick="abrirModalEstadisticas(); cerrarHeaderMenu();"
+        class="header-menu-item primary">
+
+        Estadísticas
+
+      </button>
+
+
+      <!-- RECAP -->
+
+      <button
+        onclick="abrirModalRecap(); cerrarHeaderMenu();"
+        class="header-menu-item primary">
+
+        RECAP MENSUAL
+
+      </button>
+
+    </div>
 
   </div>
-  <div class="bg-white p-6 rounded-xl shadow">
 
-  <div class="flex justify-between items-center mb-3">
-    <span class="font-semibold text-slate-700">
-      Facturación vs Ganancia
+
+<!-- ==========================================================
+     DASHBOARD PROFESIONAL
+     ========================================================== -->
+
+<div class="dashboard-header">
+
+
+  <!-- ENCABEZADO -->
+
+  <div class="dashboard-heading">
+
+    <div class="dashboard-heading-left">
+
+      <h1>
+        Dashboard
+      </h1>
+
+      <p>
+        Resumen general de tu negocio
+      </p>
+
+    </div>
+
+
+    <select
+      id="filtro-mes"
+      class="dashboard-month">
+    </select>
+
+  </div>
+
+
+  <!-- ========================================================
+       KPIs PRINCIPALES
+       ======================================================== -->
+
+  <div class="dashboard-kpis">
+
+
+    <!-- FACTURACIÓN -->
+
+    <div class="dashboard-kpi facturacion">
+
+      <div class="dashboard-kpi-label">
+        Facturación
+      </div>
+
+      <div
+        id="total-facturacion"
+        class="dashboard-kpi-value">
+
+        $0
+
+      </div>
+
+      <div id="facturacion-comparacion" class="dashboard-kpi-sub">
+  Facturación del mes
+</div>
+
+    </div>
+
+
+    <!-- GANANCIA NETA -->
+
+    <div class="dashboard-kpi ganancia">
+
+      <div class="dashboard-kpi-label">
+        Ganancia neta
+      </div>
+
+      <div
+        id="total-neta"
+        class="dashboard-kpi-value">
+
+        $0
+
+      </div>
+
+      <div id="ganancia-comparacion" class="dashboard-kpi-sub">
+  Ganancia después del taller
+</div>
+
+    </div>
+
+
+    <!-- PROFIT -->
+
+    <div class="dashboard-kpi profit">
+
+      <div class="dashboard-kpi-label">
+        Profit
+      </div>
+
+      <div
+        id="dashboard-profit"
+        class="dashboard-kpi-value">
+
+        0%
+
+      </div>
+
+      <div id="profit-comparacion" class="dashboard-kpi-sub">
+  Ganancia sobre facturación
+</div>
+
+    </div>
+
+
+    <!-- BOLSAS -->
+
+    <div class="dashboard-kpi bolsas">
+
+      <div class="dashboard-kpi-label">
+        Bolsas vendidas
+      </div>
+
+      <div
+        id="total-bolsas"
+        class="dashboard-kpi-value">
+
+        0
+
+      </div>
+
+      <div id="bolsas-comparacion" class="dashboard-kpi-sub">
+  Unidades vendidas
+</div>
+
+    </div>
+
+
+  </div>
+
+
+  <!-- ========================================================
+       GRÁFICO
+       ======================================================== -->
+
+  <div class="dashboard-chart" id="graficoFacturacionCard">
+
+  <!-- CABECERA DEL DROPDOWN -->
+  <div
+    class="dashboard-chart-header"
+    onclick="toggleGraficoFacturacion()"
+  >
+
+    <div>
+
+      <div class="dashboard-section-title">
+        Facturación vs Ganancia
+      </div>
+
+      <div class="dashboard-section-subtitle">
+        Evolución mensual
+      </div>
+
+    </div>
+
+    <span
+      id="graficoFacturacionArrow"
+      class="dashboard-chart-arrow"
+    >
+      ▶
     </span>
+
   </div>
 
-  <canvas id="graficoFacturacion" height="180"></canvas>
 
-</div>
-<div class="grid grid-cols-2 gap-6 mb-6">
-  <div class="w-[450px]">
-    <div class="bg-white p-4 rounded-xl shadow">
-    <div class="flex justify-between items-center mb-3">
-      <span class="font-semibold text-slate-700">Resumen</span>
+  <!-- CONTENIDO DEL GRÁFICO -->
+  <div
+    id="graficoFacturacionContent"
+    class="dashboard-chart-content"
+  >
 
-      <select id="filtro-mes" 
-        class="border border-slate-300 rounded-lg px-2 py-1 text-sm">
-      </select>
+    <div style="height: 300px;">
+
+      <canvas
+        id="graficoFacturacion">
+      </canvas>
+
     </div>
 
-    <div class="grid grid-cols-4 gap-3 text-sm">
-
-  <div class="bg-slate-100 p-3 rounded-lg">
-    <div class="text-slate-500">Ganancia Bruta</div>
-    <div id="total-bruta" class="font-bold">$0</div>
-  </div>
-
-  <div class="bg-amber-100 p-3 rounded-lg">
-    <div class="text-amber-700">Ganancia Taller</div>
-    <div id="total-taller" class="font-bold">$0</div>
-  </div>
-
-  <div class="bg-green-100 p-3 rounded-lg">
-    <div class="text-green-700">Ganancia Neta</div>
-    <div id="total-neta" class="font-bold">$0</div>
-  </div>
-
-  <div class="bg-emerald-100 p-3 rounded-lg">
-  <div class="text-emerald-700">Facturación</div>
-  <div id="total-facturacion" class="font-bold">$0</div>
-</div>
-
-  <!-- NUEVAS MÉTRICAS -->
-
-  <div class="bg-blue-100 p-3 rounded-lg">
-    <div class="text-blue-700">Bolsas vendidas</div>
-    <div id="total-bolsas" class="font-bold">0</div>
-  </div>
-
-  <div class="bg-purple-100 p-3 rounded-lg">
-    <div class="text-purple-700">Color más vendido</div>
-    <div id="color-top" class="font-bold">-</div>
-  </div>
-
-  <div class="bg-pink-100 p-3 rounded-lg">
-    <div class="text-pink-700">Tamaño más vendido</div>
-    <div id="tamano-top" class="font-bold">-</div>
   </div>
 
 </div>
 
-  </div>
-  
-  <!-- CONTADORES -->
-    <div class="text-sm font-semibold flex justify-between mb-2">
-      <span class="text-red-600">
-        Pendiente de compra: <span id="count-comprar">0</span>
-      </span>
 
-      <span class="text-amber-600">
-        Seña: <span id="count-sena">0</span>
-      </span>
+  <!-- ========================================================
+       INFORMACIÓN INFERIOR
+       ======================================================== -->
 
-      <span class="text-green-600">
-        Entregados: <span id="count-entregado">0</span>
-      </span>
+  <div class="dashboard-bottom">
+
+
+    <!-- ESTADO DE PEDIDOS -->
+
+    <div class="dashboard-info-card">
+
+
+      <div class="dashboard-section-header">
+
+        <div>
+
+          <div class="dashboard-section-title">
+            Estado de pedidos
+          </div>
+
+          <div class="dashboard-section-subtitle">
+            Situación actual de tus ventas
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="dashboard-status-list">
+
+
+        <!-- PENDIENTE -->
+
+        <div class="dashboard-status">
+
+          <span class="dashboard-status-label">
+            🔴 Pendiente de compra
+          </span>
+
+          <span
+            id="count-comprar"
+            class="dashboard-status-value text-red-600">
+
+            0
+
+          </span>
+
+        </div>
+
+
+        <!-- SEÑA -->
+
+        <div class="dashboard-status">
+
+          <span class="dashboard-status-label">
+            🟡 Con seña
+          </span>
+
+          <span
+            id="count-sena"
+            class="dashboard-status-value text-amber-600">
+
+            0
+
+          </span>
+
+        </div>
+
+
+        <!-- ENTREGADOS -->
+
+        <div class="dashboard-status">
+
+          <span class="dashboard-status-label">
+            🟢 Entregados
+          </span>
+
+          <span
+            id="count-entregado"
+            class="dashboard-status-value text-green-600">
+
+            0
+
+          </span>
+
+        </div>
+
+
+      </div>
+
     </div>
+
+
+    <!-- PRODUCTOS DESTACADOS -->
+
+    <div class="dashboard-info-card">
+
+
+      <div class="dashboard-section-header">
+
+        <div>
+
+          <div class="dashboard-section-title">
+            Productos destacados
+          </div>
+
+          <div class="dashboard-section-subtitle">
+            Lo más vendido del período
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div>
+
+
+        <!-- COLOR -->
+
+        <div class="dashboard-highlight">
+
+          <span class="dashboard-highlight-label">
+            🎨 Color más vendido
+          </span>
+
+          <span
+            id="color-top"
+            class="dashboard-highlight-value">
+
+            -
+
+          </span>
+
+        </div>
+
+
+        <!-- TAMAÑO -->
+
+        <div class="dashboard-highlight">
+
+          <span class="dashboard-highlight-label">
+            📦 Tamaño más vendido
+          </span>
+
+          <span
+            id="tamano-top"
+            class="dashboard-highlight-value">
+
+            -
+
+          </span>
+
+        </div>
+
+
+        <!-- GANANCIA BRUTA -->
+
+        <div class="dashboard-highlight">
+
+          <span class="dashboard-highlight-label">
+            💰 Ganancia bruta
+          </span>
+
+          <span
+            id="total-bruta"
+            class="dashboard-highlight-value">
+
+            $0
+
+          </span>
+
+        </div>
+
+
+        <!-- GANANCIA TALLER -->
+
+        <div class="dashboard-highlight">
+
+          <span class="dashboard-highlight-label">
+            🏭 Ganancia taller
+          </span>
+
+          <span
+            id="total-taller"
+            class="dashboard-highlight-value">
+
+            $0
+
+          </span>
+
+        </div>
+
+
+      </div>
+
+    </div>
+
+
   </div>
+
+
+</div>  
+
 </div>
-</div>
-
-  
-
-</div>
-
-
-
-
 <div class="bg-white p-6 rounded-2xl shadow mb-8">
   <h2 class="text-xl font-semibold mb-4 text-slate-700">Nueva Venta</h2>
 
@@ -348,6 +1461,100 @@
 </div>
 
 <script>
+
+function toggleHeaderMenu() {
+
+  const panel =
+    document.getElementById("headerMenuPanel");
+
+  const trigger =
+    document.getElementById("headerMenuTrigger");
+
+
+  const abierto =
+    panel.classList.toggle("open");
+
+
+  trigger.classList.toggle(
+    "open",
+    abierto
+  );
+
+
+  trigger.setAttribute(
+    "aria-expanded",
+    abierto ? "true" : "false"
+  );
+
+}
+
+
+function cerrarHeaderMenu() {
+
+  const panel =
+    document.getElementById("headerMenuPanel");
+
+  const trigger =
+    document.getElementById("headerMenuTrigger");
+
+
+  panel.classList.remove("open");
+
+  trigger.classList.remove("open");
+
+  trigger.setAttribute(
+    "aria-expanded",
+    "false"
+  );
+
+}
+
+
+/* CERRAR AL HACER CLICK AFUERA */
+
+document.addEventListener(
+  "click",
+  function(e) {
+
+    const panel =
+      document.getElementById(
+        "headerMenuPanel"
+      );
+
+    const trigger =
+      document.getElementById(
+        "headerMenuTrigger"
+      );
+
+
+    if (!panel || !trigger) {
+      return;
+    }
+
+
+    if (
+
+      panel.classList.contains("open") &&
+
+      !panel.contains(e.target) &&
+
+      !trigger.contains(e.target)
+
+    ) {
+
+      cerrarHeaderMenu();
+
+    }
+
+  }
+);
+
+</script>
+
+<script>
+
+
+
   let sumaActiva = false;
 let sumaTotal = 0;
 let tooltipSuma = null;
@@ -583,6 +1790,17 @@ window.filtrarClientes = function() {
     crearGraficoFacturacion();
 cargarFiltroMeses();
 calcularTotales();
+
+window.toggleGraficoFacturacion = function() {
+
+  const card = document.getElementById("graficoFacturacionCard");
+
+  if (!card) return;
+
+  card.classList.toggle("open");
+
+};
+
 function crearGraficoFacturacion() {
 
   const ventasPorMes = {};
@@ -964,6 +2182,44 @@ function cargarFiltroMeses() {
 
 }
 
+function calcularVariacion(actual, anterior) {
+
+  if (anterior === 0) {
+    if (actual === 0) return 0;
+    return 100;
+  }
+
+  return ((actual - anterior) / anterior) * 100;
+}
+
+
+function mostrarComparacion(elementId, actual, anterior) {
+
+  const elemento = document.getElementById(elementId);
+
+  if (!elemento) return;
+
+  const variacion = calcularVariacion(actual, anterior);
+
+  if (anterior === 0) {
+
+    elemento.innerHTML = "Sin datos del mes anterior";
+    elemento.style.color = "#94a3b8";
+
+    return;
+  }
+
+  const flecha = variacion >= 0 ? "↑" : "↓";
+
+  const signo = variacion >= 0 ? "+" : "";
+
+  elemento.innerHTML =
+    `${flecha} ${signo}${variacion.toFixed(1)}% vs mes anterior`;
+
+  elemento.style.color =
+    variacion >= 0 ? "#16a34a" : "#dc2626";
+}
+
 function calcularTotales() {
 
   const filtro = document.getElementById("filtro-mes").value;
@@ -978,6 +2234,39 @@ function calcularTotales() {
     });
   }
 
+  // ========================================
+// MES ANTERIOR
+// ========================================
+
+let ventasMesAnterior = [];
+
+if (filtro !== "todos") {
+
+  const [anio, mes] = filtro.split("-").map(Number);
+
+  let anioAnterior = anio;
+  let mesAnterior = mes - 1;
+
+  if (mesAnterior < 0) {
+    mesAnterior = 11;
+    anioAnterior--;
+  }
+
+  const claveAnterior = `${anioAnterior}-${mesAnterior}`;
+
+  ventasMesAnterior = ventasGlobal.filter(v => {
+
+    const fecha = new Date(v.fecha);
+
+    const clave =
+      `${fecha.getFullYear()}-${fecha.getMonth()}`;
+
+    return clave === claveAnterior;
+
+  });
+
+}
+
   // 🔹 GANANCIAS
   const totalBruta = filtradas.reduce((acc, v) => acc + Number(v.ganancia_total), 0);
   const totalTaller = filtradas.reduce((acc, v) => acc + Number(v.ganancia_taller), 0);
@@ -987,23 +2276,101 @@ function calcularTotales() {
   0
 );
 
+// ========================================
+// DATOS DEL MES ANTERIOR
+// ========================================
+
+const facturacionAnterior = ventasMesAnterior.reduce(
+  (acc, v) => acc + Number(v.precio_final || 0),
+  0
+);
+
+const gananciaAnterior = ventasMesAnterior.reduce(
+  (acc, v) => acc + Number(v.ganancia_personal || 0),
+  0
+);
+
+const bolsasAnterior = ventasMesAnterior.reduce(
+  (acc, v) => acc + Number(v.cantidad || 0),
+  0
+);
+
+const profitAnterior =
+  facturacionAnterior > 0
+    ? (gananciaAnterior / facturacionAnterior) * 100
+    : 0;
+
+const profit =
+  totalFacturacion > 0
+    ? (totalNeta / totalFacturacion) * 100
+    : 0;
+
   document.getElementById("total-bruta").innerText = "$" + formatearPesos(totalBruta);
   document.getElementById("total-taller").innerText = "$" + formatearPesos(totalTaller);
   document.getElementById("total-neta").innerText = "$" + formatearPesos(totalNeta);
   document.getElementById("total-facturacion").innerText =
   "$" + formatearPesos(totalFacturacion);
 
-  // 🔹 CANTIDAD TOTAL DE BOLSAS
-  const bolsasHistoricas = 50000;
+  document.getElementById("dashboard-profit").innerText =
+  profit.toFixed(1) + "%";
+
+// 🔹 CANTIDAD TOTAL DE BOLSAS
+const bolsasHistoricas = 50000;
 
 let totalBolsas = filtradas.reduce(
-  (acc, v) => acc + Number(v.cantidad),
+  (acc, v) => acc + Number(v.cantidad || 0),
   0
 );
 
 // Solo sumar histórico si está seleccionado "todos"
 if (filtro === "todos") {
   totalBolsas += bolsasHistoricas;
+}
+
+  // ========================================
+// COMPARACIONES
+// ========================================
+
+if (filtro === "todos") {
+
+  document.getElementById("facturacion-comparacion").innerText =
+    "Todos los meses";
+
+  document.getElementById("ganancia-comparacion").innerText =
+    "Todos los meses";
+
+  document.getElementById("profit-comparacion").innerText =
+    "Todos los meses";
+
+  document.getElementById("bolsas-comparacion").innerText =
+    "Todos los meses";
+
+} else {
+
+  mostrarComparacion(
+    "facturacion-comparacion",
+    totalFacturacion,
+    facturacionAnterior
+  );
+
+  mostrarComparacion(
+    "ganancia-comparacion",
+    totalNeta,
+    gananciaAnterior
+  );
+
+  mostrarComparacion(
+    "profit-comparacion",
+    profit,
+    profitAnterior
+  );
+
+  mostrarComparacion(
+    "bolsas-comparacion",
+    totalBolsas,
+    bolsasAnterior
+  );
+
 }
 
 document.getElementById("total-bolsas").innerText = 
