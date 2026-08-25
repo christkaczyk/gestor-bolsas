@@ -479,6 +479,253 @@ app.listen(process.env.PORT, () => {
   console.log("Servidor corriendo en puerto", process.env.PORT);
 });
 
+// ======================================================
+// INGRESOS / EGRESOS
+// ======================================================
+
+
+// ======================================================
+// OBTENER MOVIMIENTOS
+// ======================================================
+
+app.get("/movimientos-financieros", async (req, res) => {
+
+  try {
+
+    const result = await pool.query(`
+      SELECT *
+      FROM movimientos_financieros
+      ORDER BY fecha DESC, id DESC
+    `);
+
+    res.json(result.rows);
+
+  } catch (error) {
+
+    console.error("Error obteniendo movimientos:", error);
+
+    res.status(500).json({
+      error: "Error al obtener movimientos"
+    });
+
+  }
+
+});
+
+
+// ======================================================
+// CREAR MOVIMIENTO
+// ======================================================
+
+app.post("/movimientos-financieros", async (req, res) => {
+
+  try {
+
+    const {
+      fecha,
+      tipo,
+      categoria,
+      descripcion,
+      monto,
+      medio_pago,
+      cuenta,
+      comprobante,
+      notas
+    } = req.body;
+
+
+    if (!fecha || !tipo || !categoria || !monto) {
+
+      return res.status(400).json({
+        error: "Faltan datos obligatorios"
+      });
+
+    }
+
+
+    if (!["ingreso", "egreso"].includes(tipo)) {
+
+      return res.status(400).json({
+        error: "Tipo de movimiento inválido"
+      });
+
+    }
+
+
+    const result = await pool.query(`
+      INSERT INTO movimientos_financieros
+      (
+        fecha,
+        tipo,
+        categoria,
+        descripcion,
+        monto,
+        medio_pago,
+        cuenta,
+        comprobante,
+        notas
+      )
+
+      VALUES
+      (
+        $1,$2,$3,$4,$5,$6,$7,$8,$9
+      )
+
+      RETURNING *
+    `, [
+      fecha,
+      tipo,
+      categoria,
+      descripcion || null,
+      Number(monto),
+      medio_pago || null,
+      cuenta || null,
+      comprobante || null,
+      notas || null
+    ]);
+
+
+    res.status(201).json(result.rows[0]);
+
+
+  } catch (error) {
+
+    console.error("Error creando movimiento:", error);
+
+    res.status(500).json({
+      error: "Error al crear movimiento"
+    });
+
+  }
+
+});
+
+
+// ======================================================
+// EDITAR MOVIMIENTO
+// ======================================================
+
+app.put("/movimientos-financieros/:id", async (req, res) => {
+
+  try {
+
+    const { id } = req.params;
+
+    const {
+      fecha,
+      tipo,
+      categoria,
+      descripcion,
+      monto,
+      medio_pago,
+      cuenta,
+      comprobante,
+      notas
+    } = req.body;
+
+
+    const result = await pool.query(`
+      UPDATE movimientos_financieros
+
+      SET
+        fecha = $1,
+        tipo = $2,
+        categoria = $3,
+        descripcion = $4,
+        monto = $5,
+        medio_pago = $6,
+        cuenta = $7,
+        comprobante = $8,
+        notas = $9,
+        actualizado_en = NOW()
+
+      WHERE id = $10
+
+      RETURNING *
+    `, [
+      fecha,
+      tipo,
+      categoria,
+      descripcion || null,
+      Number(monto),
+      medio_pago || null,
+      cuenta || null,
+      comprobante || null,
+      notas || null,
+      id
+    ]);
+
+
+    if (result.rows.length === 0) {
+
+      return res.status(404).json({
+        error: "Movimiento no encontrado"
+      });
+
+    }
+
+
+    res.json(result.rows[0]);
+
+
+  } catch (error) {
+
+    console.error("Error editando movimiento:", error);
+
+    res.status(500).json({
+      error: "Error al editar movimiento"
+    });
+
+  }
+
+});
+
+
+// ======================================================
+// ELIMINAR MOVIMIENTO
+// ======================================================
+
+app.delete("/movimientos-financieros/:id", async (req, res) => {
+
+  try {
+
+    const { id } = req.params;
+
+
+    const result = await pool.query(`
+      DELETE FROM movimientos_financieros
+      WHERE id = $1
+      RETURNING *
+    `, [id]);
+
+
+    if (result.rows.length === 0) {
+
+      return res.status(404).json({
+        error: "Movimiento no encontrado"
+      });
+
+    }
+
+
+    res.json({
+      ok: true,
+      message: "Movimiento eliminado correctamente"
+    });
+
+
+  } catch (error) {
+
+    console.error("Error eliminando movimiento:", error);
+
+    res.status(500).json({
+      error: "Error al eliminar movimiento"
+    });
+
+  }
+
+});
+
 // Actualizar estado factura
 app.put("/ventas/:id/factura", async (req, res) => {
   try {
