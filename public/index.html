@@ -1461,7 +1461,179 @@ function cerrarModalConfig() {
   document.getElementById("modalConfig").classList.add("hidden");
 }
 
+// ==========================================
+// HISTORIAL DE PRECIOS
+// ==========================================
 
+async function abrirHistorialPrecios() {
+
+  const modal =
+    document.getElementById("modalHistorialPrecios");
+
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+
+  await cargarHistorialPrecios();
+
+}
+
+
+function cerrarHistorialPrecios() {
+
+  const modal =
+    document.getElementById("modalHistorialPrecios");
+
+  modal.classList.add("hidden");
+  modal.classList.remove("flex");
+
+}
+
+
+async function cargarHistorialPrecios() {
+
+  const contenedor =
+    document.getElementById("listaHistorialPrecios");
+
+  contenedor.innerHTML = `
+    <div class="text-center py-10 text-gray-500">
+      Cargando historial...
+    </div>
+  `;
+
+
+  try {
+
+    const response =
+      await fetch("/config/historial-precios");
+
+    const historial =
+      await response.json();
+
+
+    if (!response.ok) {
+      throw new Error(
+        historial.error ||
+        "Error al cargar historial"
+      );
+    }
+
+
+    if (historial.length === 0) {
+
+      contenedor.innerHTML = `
+        <div class="text-center py-12 text-gray-500">
+
+          <div class="text-4xl mb-3">
+            📜
+          </div>
+
+          <p>
+            Todavía no hay cambios registrados.
+          </p>
+
+        </div>
+      `;
+
+      return;
+
+    }
+
+
+    contenedor.innerHTML = "";
+
+
+    historial.forEach(cambio => {
+
+      const fecha =
+        new Date(cambio.fecha_hora);
+
+
+      const fechaFormateada =
+        fecha.toLocaleDateString(
+          "es-AR",
+          {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric"
+          }
+        );
+
+
+      const horaFormateada =
+        fecha.toLocaleTimeString(
+          "es-AR",
+          {
+            hour: "2-digit",
+            minute: "2-digit"
+          }
+        );
+
+
+      const fila =
+        document.createElement("div");
+
+
+      fila.className =
+        "border-b last:border-b-0 px-5 py-4 hover:bg-slate-50";
+
+
+      fila.innerHTML = `
+
+        <div class="flex justify-between items-start gap-4">
+
+          <div>
+
+            <div class="font-semibold text-slate-800">
+
+              ${cambio.detalle}
+
+            </div>
+
+            <div class="text-xs text-gray-500 mt-1">
+
+              📅 ${fechaFormateada}
+              &nbsp;&nbsp;
+              🕐 ${horaFormateada}
+
+            </div>
+
+          </div>
+
+          <span
+            class="text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full">
+
+            #${cambio.id}
+
+          </span>
+
+        </div>
+
+      `;
+
+
+      contenedor.appendChild(fila);
+
+    });
+
+
+  } catch (error) {
+
+    console.error(error);
+
+
+    contenedor.innerHTML = `
+
+      <div class="text-center py-10 text-red-500">
+
+        Error al cargar el historial.
+
+      </div>
+
+    `;
+
+  }
+
+}
 
 // ==========================================
 // CONFIGURACIÓN DE PRECIOS - NUEVA PLANILLA
@@ -3206,6 +3378,14 @@ window.editarPrecio = function(td, id, precioActual) {
 
       <div class="flex gap-3">
 
+        <button
+  onclick="abrirHistorialPrecios()"
+  class="bg-slate-700 hover:bg-slate-800 text-white px-5 py-2 rounded-lg font-semibold">
+
+  📜 Historial de precios
+
+</button>
+
   <button
     onclick="cerrarModalConfig()"
     class="bg-gray-200 hover:bg-gray-300 px-5 py-2 rounded-lg">
@@ -3233,7 +3413,74 @@ window.editarPrecio = function(td, id, precioActual) {
 
 </div>
 
+<!-- ========================================== -->
+<!-- MODAL HISTORIAL DE PRECIOS -->
+<!-- ========================================== -->
 
+<div
+  id="modalHistorialPrecios"
+  class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-[60]">
+
+  <div
+    class="bg-white w-[900px] max-w-[95vw] max-h-[85vh] rounded-2xl shadow-2xl p-6 flex flex-col">
+
+    <!-- HEADER -->
+
+    <div class="flex justify-between items-center mb-5">
+
+      <div>
+
+        <h2 class="text-xl font-bold text-slate-800">
+          Historial de cambios de precios
+        </h2>
+
+        <p class="text-sm text-gray-500 mt-1">
+          Registro de todas las modificaciones realizadas en costos y precios.
+        </p>
+
+      </div>
+
+      <button
+        onclick="cerrarHistorialPrecios()"
+        class="text-gray-500 hover:text-black text-xl">
+
+        ✕
+
+      </button>
+
+    </div>
+
+
+    <!-- HISTORIAL -->
+
+    <div
+      id="listaHistorialPrecios"
+      class="overflow-y-auto flex-1 border rounded-xl">
+
+      <div class="text-center py-10 text-gray-500">
+        Cargando historial...
+      </div>
+
+    </div>
+
+
+    <!-- FOOTER -->
+
+    <div class="flex justify-end mt-5">
+
+      <button
+        onclick="cerrarHistorialPrecios()"
+        class="bg-gray-200 hover:bg-gray-300 px-5 py-2 rounded-lg">
+
+        Cerrar
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
 
 <!-- MODAL COPYS -->
 <div id="modalCopys" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50">

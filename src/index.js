@@ -886,48 +886,235 @@ app.get("/precios-pack/:id", async (req, res) => {
 // GUARDAR TODOS LOS PRECIOS DE LA PLANILLA
 // ==========================================
 
+// ==========================================
+// GUARDAR TODOS LOS PRECIOS DE LA PLANILLA
+// + HISTORIAL DE CAMBIOS
+// ==========================================
+
 app.put("/config/guardar-todos", async (req, res) => {
 
   const { productos } = req.body;
 
   if (!Array.isArray(productos)) {
-
     return res.status(400).json({
       error: "Formato de datos inválido"
     });
-
   }
 
   const client = await pool.connect();
 
   try {
 
-    // Comenzamos una transacción
     await client.query("BEGIN");
 
+    // ==========================================
+    // OBTENER ESTADO ACTUAL ANTES DE MODIFICAR
+    // ==========================================
 
-    // Recorrer todos los productos
+    const productosActuales = await client.query(`
+      SELECT
+        p.id,
+        p.tamano,
+        p.tipo_asa,
+        p.costo_unitario,
+        pp.cantidad,
+        pp.precio_total
+      FROM productos p
+      LEFT JOIN precios_pack pp
+        ON pp.producto_id = p.id
+      WHERE p.activo = true
+      ORDER BY p.id, pp.cantidad
+    `);
+
+
+    // ==========================================
+    // MAPA DE VALORES ACTUALES
+    // ==========================================
+
+    const actuales = {};
+
+    productosActuales.rows.forEach(row => {
+
+      if (!actuales[row.id]) {
+
+        actuales[row.id] = {
+          nombre: `${row.tamano} ${row.tipo_asa}`,
+          costo_unitario: Number(row.costo_unitario),
+          packs: {}
+        };
+
+      }
+
+      if (row.cantidad !== null) {
+
+        actuales[row.id].packs[row.cantidad] =
+          Number(row.precio_total);
+
+      }
+
+    });
+
+
+    // ==========================================
+    // DETECTAR CAMBIOS
+    // ==========================================
+
+    const cambiosCosto = [];
+    const cambiosPacks = [];
+
+    let totalPacks = 0;
+    let packsModificados = 0;
+
+
+    // Contar cantidad total de packs existentes
+
+    Object.values(actuales).forEach(producto => {
+
+      totalPacks += Object.keys(producto.packs).length;
+
+    });
+
+
+    // ==========================================
+    // COMPARAR TODO
+    // ==========================================
+
     for (const producto of productos) {
 
-      // --------------------------------------
-      // ACTUALIZAR COSTO UNITARIO
-      // --------------------------------------
+      const actual = actuales[producto.producto_id];
+
+      if (!actual) continue;
+
+
+      // ------------------------------------------
+      // COSTO UNITARIO
+      // ------------------------------------------
+
+      const nuevoCosto =
+        Number(producto.costo_unitario);
+
+      const costoAnterior =
+        Number(actual.costo_unitario);
+
+      if (Math.abs(nuevoCosto - costoAnterior) > 0.001) {
+
+        cambiosCosto.push({
+          producto_id: producto.producto_id,
+          producto: actual.nombre,
+          anterior: costoAnterior,
+          nuevo: nuevoCosto
+        });
+
+      }
+
+
+      // ------------------------------------------
+      // PACKS
+      // ------------------------------------------
+
+      for (const pack of producto.packs) {
+
+        const cantidad = Number(pack.cantidad);
+
+        const nuevoPrecio =
+          Number(pack.precio_total);
+
+        const precioAnterior =
+          Number(actual.packs[cantidad] ?? 0);
+
+
+        if (Math.abs(nuevoPrecio - precioAnterior) > 0.001) {
+
+          packsModificados++;
+
+          cambiosPacks.push({
+            producto_id: producto.producto_id,
+            producto: actual.nombre,
+            pack: cantidad,
+            anterior: precioAnterior,
+            nuevo: nuevoPrecio
+          });
+
+        }
+
+      }
+
+    }
+
+
+    // ==========================================
+    // GENERAR RESUMEN
+    // ==========================================
+
+    const resumenes = [];
+
+
+    // ------------------------------------------
+    // TODOS LOS PACKS MODIFICADOS
+    // ------------------------------------------
+
+    if (
+      totalPacks > 0 &&
+      packsModificados === totalPacks
+    ) {
+
+      resumenes.push(
+        "Se aumentaron todos los precios de los packs"
+      );
+
+    } else {
+
+      // ------------------------------------------
+      // PACKS INDIVIDUALES
+      // ------------------------------------------
+
+      if (cambiosPacks.length > 0) {
+
+        cambiosPacks.forEach(cambio => {
+
+          resumenes.push(
+            `Se modificó Pack ${cambio.pack} — ${cambio.producto}`
+          );
+
+        });
+
+      }
+
+    }
+
+
+    // ------------------------------------------
+    // COSTOS UNITARIOS
+    // ------------------------------------------
+
+    cambiosCosto.forEach(cambio => {
+
+      resumenes.push(
+        `Se modificó el costo unitario — ${cambio.producto}`
+      );
+
+    });
+
+
+    // ==========================================
+    // GUARDAR CAMBIOS EN PRODUCTOS
+    // ==========================================
+
+    for (const producto of productos) {
 
       await client.query(`
         UPDATE productos
         SET costo_unitario = $1
         WHERE id = $2
       `, [
-
         producto.costo_unitario,
         producto.producto_id
-
       ]);
 
 
-      // --------------------------------------
-      // ACTUALIZAR PRECIOS DE LOS PACKS
-      // --------------------------------------
+      // ------------------------------------------
+      // GUARDAR PACKS
+      // ------------------------------------------
 
       for (const pack of producto.packs) {
 
@@ -938,11 +1125,9 @@ app.put("/config/guardar-todos", async (req, res) => {
           WHERE producto_id = $2
             AND cantidad = $3
         `, [
-
           pack.precio_total,
           producto.producto_id,
           pack.cantidad
-
         ]);
 
       }
@@ -950,7 +1135,37 @@ app.put("/config/guardar-todos", async (req, res) => {
     }
 
 
-    // Si todo salió bien
+    // ==========================================
+    // GUARDAR EN HISTORIAL
+    // ==========================================
+
+    if (resumenes.length > 0) {
+
+      await client.query(`
+        INSERT INTO historial_precios
+        (
+          detalle,
+          cambios
+        )
+        VALUES ($1, $2)
+      `, [
+
+        resumenes.join(" | "),
+
+        JSON.stringify({
+          costos: cambiosCosto,
+          packs: cambiosPacks
+        })
+
+      ]);
+
+    }
+
+
+    // ==========================================
+    // CONFIRMAR
+    // ==========================================
+
     await client.query("COMMIT");
 
 
@@ -962,14 +1177,12 @@ app.put("/config/guardar-todos", async (req, res) => {
 
   } catch (error) {
 
-    // Si algo falla, deshacer TODO
     await client.query("ROLLBACK");
 
     console.error(
       "Error guardando configuración:",
       error
     );
-
 
     res.status(500).json({
       error: "Error al guardar los precios"
@@ -979,6 +1192,41 @@ app.put("/config/guardar-todos", async (req, res) => {
   } finally {
 
     client.release();
+
+  }
+
+});
+
+// ==========================================
+// OBTENER HISTORIAL DE PRECIOS
+// ==========================================
+
+app.get("/config/historial-precios", async (req, res) => {
+
+  try {
+
+    const result = await pool.query(`
+      SELECT
+        id,
+        fecha_hora,
+        detalle,
+        cambios
+      FROM historial_precios
+      ORDER BY fecha_hora DESC, id DESC
+    `);
+
+    res.json(result.rows);
+
+  } catch (error) {
+
+    console.error(
+      "Error obteniendo historial de precios:",
+      error
+    );
+
+    res.status(500).json({
+      error: "Error al obtener historial de precios"
+    });
 
   }
 
