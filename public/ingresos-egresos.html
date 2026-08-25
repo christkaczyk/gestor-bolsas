@@ -1,0 +1,2709 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Ingresos / Egresos - ZettaPrint</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+
+    body {
+      background: #f4f6f9;
+      font-family: Arial, sans-serif;
+    }
+
+    .card {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    }
+
+    .modal-bg {
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(5px);
+    }
+
+    input,
+    select,
+    textarea {
+      outline: none;
+    }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 2px rgba(99,102,241,0.15);
+    }
+
+  </style>
+</head>
+
+
+<body>
+
+<!-- ====================================================== -->
+<!-- HEADER -->
+<!-- ====================================================== -->
+
+<header class="bg-gradient-to-r from-pink-200 via-purple-200 to-blue-300 p-6 shadow">
+
+  <div class="max-w-7xl mx-auto flex items-center justify-between">
+
+    <div>
+
+      <h1 class="text-3xl font-bold text-gray-800">
+        Ingresos / Egresos
+      </h1>
+
+      <p class="text-gray-600 mt-1">
+        Control financiero de ZettaPrint
+      </p>
+
+    </div>
+
+
+    <button
+      onclick="window.location.href='/'"
+      class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl font-semibold shadow">
+
+      ← Volver a Ventas
+
+    </button>
+
+  </div>
+
+</header>
+
+
+
+<!-- ====================================================== -->
+<!-- CONTENIDO -->
+<!-- ====================================================== -->
+
+<main class="max-w-7xl mx-auto p-6">
+
+
+  <!-- ==================================================== -->
+  <!-- FILTROS -->
+  <!-- ==================================================== -->
+
+  <div class="card p-5 mb-6">
+
+    <div class="flex flex-wrap items-end gap-4">
+
+      <div>
+
+        <label class="block text-sm font-semibold mb-1">
+          Desde
+        </label>
+
+        <input
+          type="date"
+          id="filtroDesde"
+          class="border rounded-lg px-3 py-2">
+
+      </div>
+
+
+      <div>
+
+        <label class="block text-sm font-semibold mb-1">
+          Hasta
+        </label>
+
+        <input
+          type="date"
+          id="filtroHasta"
+          class="border rounded-lg px-3 py-2">
+
+      </div>
+
+
+      <div>
+
+        <label class="block text-sm font-semibold mb-1">
+          Tipo
+        </label>
+
+        <select
+          id="filtroTipo"
+          class="border rounded-lg px-3 py-2">
+
+          <option value="">Todos</option>
+          <option value="ingreso">Ingresos</option>
+          <option value="egreso">Egresos</option>
+
+        </select>
+
+      </div>
+
+
+      <div>
+
+        <label class="block text-sm font-semibold mb-1">
+          Categoría
+        </label>
+
+        <select
+          id="filtroCategoria"
+          class="border rounded-lg px-3 py-2">
+
+          <option value="">Todas</option>
+
+        </select>
+
+      </div>
+
+
+      <button
+        onclick="aplicarFiltros()"
+        class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-lg font-semibold">
+
+        Filtrar
+
+      </button>
+
+
+      <button
+        onclick="limpiarFiltros()"
+        class="bg-gray-200 hover:bg-gray-300 px-5 py-2.5 rounded-lg">
+
+        Limpiar
+
+      </button>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- ==================================================== -->
+  <!-- TARJETAS RESUMEN -->
+  <!-- ==================================================== -->
+
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-5 mb-6">
+
+
+    <!-- SALDO -->
+
+    <div class="card p-5">
+
+      <p class="text-gray-500 text-sm">
+        Saldo
+      </p>
+
+      <h2
+        id="resumenSaldo"
+        class="text-3xl font-bold mt-2">
+
+        $0
+
+      </h2>
+
+    </div>
+
+
+    <!-- INGRESOS -->
+
+    <div class="card p-5">
+
+      <p class="text-gray-500 text-sm">
+        Ingresos
+      </p>
+
+      <h2
+        id="resumenIngresos"
+        class="text-3xl font-bold text-green-600 mt-2">
+
+        $0
+
+      </h2>
+
+    </div>
+
+
+    <!-- EGRESOS -->
+
+    <div class="card p-5">
+
+      <p class="text-gray-500 text-sm">
+        Egresos
+      </p>
+
+      <h2
+        id="resumenEgresos"
+        class="text-3xl font-bold text-red-600 mt-2">
+
+        $0
+
+      </h2>
+
+    </div>
+
+
+    <!-- RESULTADO -->
+
+    <div class="card p-5">
+
+      <p class="text-gray-500 text-sm">
+        Resultado neto
+      </p>
+
+      <h2
+        id="resumenNeto"
+        class="text-3xl font-bold mt-2">
+
+        $0
+
+      </h2>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- ==================================================== -->
+  <!-- BOTONES -->
+  <!-- ==================================================== -->
+
+  <div class="flex flex-wrap gap-3 mb-6">
+
+    <button
+      onclick="abrirModal('ingreso')"
+      class="bg-green-600 hover:bg-green-700 text-white px-5 py-3 rounded-xl font-semibold shadow">
+
+      + Nuevo ingreso
+
+    </button>
+
+
+    <button
+      onclick="abrirModal('egreso')"
+      class="bg-red-600 hover:bg-red-700 text-white px-5 py-3 rounded-xl font-semibold shadow">
+
+      − Nuevo egreso
+
+    </button>
+
+    <button
+  type="button"
+  onclick="abrirModalRegla503020()"
+  class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl font-semibold shadow">
+
+  50 / 30 / 20
+
+</button>
+
+  </div>
+
+  <!-- ==================================================== -->
+  <!-- TABLA -->
+  <!-- ==================================================== -->
+
+  <div class="card overflow-hidden">
+
+    <div class="p-5 border-b">
+
+      <div class="flex justify-between items-center">
+
+        <h2 class="text-lg font-bold">
+          Movimientos
+        </h2>
+
+        <input
+          type="text"
+          id="buscador"
+          placeholder="Buscar..."
+          oninput="renderizarTabla()"
+          class="border rounded-lg px-3 py-2">
+
+      </div>
+
+    </div>
+
+
+    <div class="overflow-x-auto">
+
+      <table class="w-full text-sm">
+
+        <thead class="bg-slate-800 text-white">
+
+          <tr>
+
+            <th class="p-3 text-left">
+              Fecha
+            </th>
+
+            <th class="p-3 text-left">
+              Tipo
+            </th>
+
+            <th class="p-3 text-left">
+              Categoría
+            </th>
+
+            <th class="p-3 text-left">
+              Descripción
+            </th>
+
+            <th class="p-3 text-left">
+              Medio
+            </th>
+
+            <th class="p-3 text-right">
+              Monto
+            </th>
+
+            <th class="p-3 text-center">
+              Acciones
+            </th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody id="tablaMovimientos"></tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+
+<!-- ==================================================== -->
+<!-- GRÁFICO -->
+<!-- ==================================================== -->
+
+<div class="card mb-6 overflow-hidden">
+
+  <!-- CABECERA DESPLEGABLE -->
+  <button
+    type="button"
+    onclick="toggleSeccion('contenidoGrafico', 'flechaGrafico')"
+    class="w-full p-5 flex items-center justify-between text-left hover:bg-gray-50 transition"
+  >
+
+    <div>
+      <h2 class="text-lg font-bold">
+        Ingresos vs Egresos
+      </h2>
+
+      <p class="text-sm text-gray-500 mt-1">
+        Comparación mensual de ingresos y egresos
+      </p>
+    </div>
+
+    <span
+      id="flechaGrafico"
+      class="text-xl font-bold text-gray-500"
+    >
+      ▶
+    </span>
+
+  </button>
+
+
+  <!-- CONTENIDO -->
+  <div
+    id="contenidoGrafico"
+    class="hidden px-6 pb-6"
+  >
+
+    <div style="height:320px">
+
+      <canvas id="graficoFinanzas"></canvas>
+
+    </div>
+
+  </div>
+
+</div>
+
+  
+<!-- ==================================================== -->
+<!-- RESUMEN MENSUAL -->
+<!-- ==================================================== -->
+
+<div class="card mb-6 overflow-hidden">
+
+  <!-- CABECERA DESPLEGABLE -->
+  <button
+    type="button"
+    onclick="toggleSeccion('contenidoResumenMensual', 'flechaResumenMensual')"
+    class="w-full p-5 flex items-center justify-between text-left hover:bg-gray-50 transition"
+  >
+
+    <div>
+
+      <h2 class="text-lg font-bold">
+        Resumen mensual
+      </h2>
+
+      <p class="text-sm text-gray-500 mt-1">
+        Evolución de ingresos, egresos y resultado
+      </p>
+
+    </div>
+
+
+    <span
+      id="flechaResumenMensual"
+      class="text-xl font-bold text-gray-500"
+    >
+      ▶
+    </span>
+
+  </button>
+
+
+  <!-- CONTENIDO -->
+  <div
+    id="contenidoResumenMensual"
+    class="hidden px-6 pb-6"
+  >
+
+    <div class="overflow-x-auto">
+
+      <table class="w-full text-sm">
+
+        <thead class="bg-slate-800 text-white">
+
+          <tr>
+
+            <th class="p-3 text-left">
+              Mes
+            </th>
+
+            <th class="p-3 text-right">
+              Ingresos
+            </th>
+
+            <th class="p-3 text-right">
+              Egresos
+            </th>
+
+            <th class="p-3 text-right">
+              Resultado
+            </th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody id="tablaResumenMensual"></tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+<!-- ==================================================== -->
+<!-- EGRESOS POR CATEGORÍA -->
+<!-- ==================================================== -->
+
+<div class="card p-0 mb-6 overflow-hidden">
+
+  <!-- CABECERA DESPLEGABLE -->
+  <button
+    type="button"
+    onclick="toggleSeccion('contenidoCategorias', 'flechaCategorias')"
+    class="w-full p-5 flex items-center justify-between text-left hover:bg-gray-50 transition"
+  >
+
+    <div>
+
+      <h2 class="text-lg font-bold">
+        Egresos por categoría
+      </h2>
+
+      <p class="text-sm text-gray-500 mt-1">
+        En qué se está utilizando el dinero
+      </p>
+
+    </div>
+
+    <span
+      id="flechaCategorias"
+      class="text-xl font-bold text-gray-500"
+    >
+      ▶
+    </span>
+
+  </button>
+
+
+  <!-- CONTENIDO -->
+  <div
+    id="contenidoCategorias"
+    class="hidden px-6 pb-6"
+  >
+
+    <div
+      id="resumenCategorias"
+      class="space-y-3"
+    >
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
+
+
+</main>
+
+<!-- ====================================================== -->
+<!-- MODAL REGLA 50 / 30 / 20 -->
+<!-- ====================================================== -->
+
+<div
+  id="modal503020"
+  class="hidden fixed inset-0 z-50 modal-bg flex items-center justify-center p-4">
+
+  <div
+    class="bg-white rounded-2xl shadow-2xl w-full max-w-lg">
+
+    <!-- HEADER -->
+
+    <div class="flex justify-between items-center p-6 border-b">
+
+      <div>
+
+        <h2 class="text-2xl font-bold">
+          Regla 50 / 30 / 20
+        </h2>
+
+        <p class="text-gray-500 text-sm mt-1">
+          Calculadora para distribuir un monto
+        </p>
+
+      </div>
+
+
+      <button
+        type="button"
+        onclick="cerrarModalRegla503020()"
+        class="text-gray-500 hover:text-black text-2xl">
+
+        ×
+
+      </button>
+
+    </div>
+
+
+    <!-- CONTENIDO -->
+
+    <div class="p-6">
+
+      <label class="block font-semibold mb-2">
+        ¿Cuánto dinero querés distribuir?
+      </label>
+
+
+      <input
+        type="number"
+        id="monto503020"
+        min="0"
+        step="1"
+        placeholder="Ej: 1000000"
+        class="w-full border rounded-lg px-4 py-3 text-lg">
+
+
+      <button
+        type="button"
+        onclick="calcular503020()"
+        class="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-lg font-semibold">
+
+        CALCULAR
+
+      </button>
+
+
+      <!-- RESULTADOS -->
+
+      <div
+        id="resultado503020"
+        class="hidden mt-6 space-y-3">
+
+
+        <!-- 50% -->
+
+        <div class="border rounded-xl p-4 bg-gray-50">
+
+          <div class="flex justify-between items-center">
+
+            <div>
+
+              <p class="font-bold">
+                50% — Servicios
+              </p>
+
+              <p class="text-sm text-gray-500">
+                Gastos y servicios
+              </p>
+
+            </div>
+
+
+            <p
+              id="resultado50"
+              class="text-xl font-bold text-indigo-600">
+
+              $0
+
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <!-- 30% -->
+
+        <div class="border rounded-xl p-4 bg-gray-50">
+
+          <div class="flex justify-between items-center">
+
+            <div>
+
+              <p class="font-bold">
+                30% — Inversión / Ahorro
+              </p>
+
+              <p class="text-sm text-gray-500">
+                Dinero destinado a ahorro o inversión
+              </p>
+
+            </div>
+
+
+            <p
+              id="resultado30"
+              class="text-xl font-bold text-green-600">
+
+              $0
+
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <!-- 20% -->
+
+        <div class="border rounded-xl p-4 bg-gray-50">
+
+          <div class="flex justify-between items-center">
+
+            <div>
+
+              <p class="font-bold">
+                20% — Gustos
+              </p>
+
+              <p class="text-sm text-gray-500">
+                Dinero para gastos personales
+              </p>
+
+            </div>
+
+
+            <p
+              id="resultado20"
+              class="text-xl font-bold text-pink-600">
+
+              $0
+
+            </p>
+
+          </div>
+
+        </div>
+
+
+        <!-- TOTAL -->
+
+        <div class="border-t pt-4 mt-4">
+
+          <div class="flex justify-between font-bold">
+
+            <span>
+              Total
+            </span>
+
+            <span id="resultadoTotal">
+              $0
+            </span>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- FOOTER -->
+
+    <div class="flex justify-end p-6 border-t">
+
+      <button
+        type="button"
+        onclick="cerrarModalRegla503020()"
+        class="bg-gray-200 hover:bg-gray-300 px-5 py-2.5 rounded-lg">
+
+        Cerrar
+
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ====================================================== -->
+<!-- MODAL -->
+<!-- ====================================================== -->
+
+<div
+  id="modalMovimiento"
+  class="hidden fixed inset-0 z-50 modal-bg flex items-center justify-center p-4">
+
+
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[95vh] overflow-y-auto">
+
+
+    <!-- HEADER MODAL -->
+
+    <div class="flex justify-between items-center p-6 border-b">
+
+      <div>
+
+        <h2
+          id="tituloModal"
+          class="text-2xl font-bold">
+
+          Nuevo movimiento
+
+        </h2>
+
+        <p class="text-gray-500 text-sm mt-1">
+          Registrá un ingreso o egreso
+        </p>
+
+      </div>
+
+
+      <button
+        onclick="cerrarModal()"
+        class="text-gray-500 hover:text-black text-2xl">
+
+        ×
+
+      </button>
+
+    </div>
+
+
+
+    <!-- FORMULARIO -->
+
+    <form
+      id="formMovimiento"
+      onsubmit="guardarMovimiento(event)"
+      class="p-6 space-y-5">
+
+
+      <input
+        type="hidden"
+        id="movimientoId">
+
+
+      <input
+        type="hidden"
+        id="movimientoTipo">
+
+
+
+      <!-- FECHA -->
+
+      <div>
+
+        <label class="block font-semibold mb-1">
+          Fecha *
+        </label>
+
+        <input
+          type="date"
+          id="campoFecha"
+          required
+          class="w-full border rounded-lg px-3 py-2">
+
+      </div>
+
+
+
+      <!-- CATEGORIA -->
+
+      <div>
+
+        <label class="block font-semibold mb-1">
+          Categoría *
+        </label>
+
+        <select
+          id="campoCategoria"
+          required
+          class="w-full border rounded-lg px-3 py-2">
+
+        </select>
+
+      </div>
+
+
+
+      <!-- DESCRIPCION -->
+
+      <div>
+
+        <label class="block font-semibold mb-1">
+          Descripción
+        </label>
+
+        <input
+          type="text"
+          id="campoDescripcion"
+          placeholder="Ej: Compra de bolsas proveedor"
+          class="w-full border rounded-lg px-3 py-2">
+
+      </div>
+
+
+
+      <!-- MONTO -->
+
+      <div>
+
+        <label class="block font-semibold mb-1">
+          Monto *
+        </label>
+
+        <input
+          type="number"
+          id="campoMonto"
+          min="0"
+          step="0.01"
+          required
+          placeholder="$0"
+          class="w-full border rounded-lg px-3 py-2">
+
+      </div>
+
+
+
+      <!-- MEDIO DE PAGO -->
+
+      <div>
+
+        <label class="block font-semibold mb-1">
+          Medio de pago
+        </label>
+
+        <select
+          id="campoMedio"
+          class="w-full border rounded-lg px-3 py-2">
+
+          <option value="">
+            Seleccionar
+          </option>
+
+          <option>
+            Efectivo
+          </option>
+
+          <option>
+            Transferencia
+          </option>
+
+          <option>
+            Mercado Pago
+          </option>
+
+          <option>
+            Tarjeta
+          </option>
+
+          <option>
+            Otro
+          </option>
+
+        </select>
+
+      </div>
+
+
+
+      <!-- CUENTA -->
+
+      <div>
+
+        <label class="block font-semibold mb-1">
+          Cuenta
+        </label>
+
+        <select
+          id="campoCuenta"
+          class="w-full border rounded-lg px-3 py-2">
+
+          <option value="">
+            Seleccionar
+          </option>
+
+          <option>
+            Caja
+          </option>
+
+          <option>
+            Banco
+          </option>
+
+          <option>
+            Mercado Pago
+          </option>
+
+          <option>
+            Astroi Pay
+          </option>
+
+          <option>
+            Otra
+          </option>
+
+        </select>
+
+      </div>
+
+
+
+      <!-- COMPROBANTE -->
+
+      <div>
+
+        <label class="block font-semibold mb-1">
+          Comprobante
+        </label>
+
+        <input
+          type="text"
+          id="campoComprobante"
+          placeholder="Número o referencia"
+          class="w-full border rounded-lg px-3 py-2">
+
+      </div>
+
+
+
+      <!-- NOTAS -->
+
+      <div>
+
+        <label class="block font-semibold mb-1">
+          Notas
+        </label>
+
+        <textarea
+          id="campoNotas"
+          rows="3"
+          placeholder="Notas adicionales..."
+          class="w-full border rounded-lg px-3 py-2"></textarea>
+
+      </div>
+
+
+
+      <!-- BOTONES -->
+
+      <div class="flex justify-end gap-3 pt-3">
+
+        <button
+          type="button"
+          onclick="cerrarModal()"
+          class="bg-gray-200 hover:bg-gray-300 px-5 py-2.5 rounded-lg">
+
+          Cancelar
+
+        </button>
+
+
+        <button
+          id="btnGuardarMovimiento"
+          type="submit"
+          class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg font-semibold">
+
+          Guardar
+
+        </button>
+
+      </div>
+
+    </form>
+
+  </div>
+
+</div>
+
+
+
+<script>
+
+
+// ======================================================
+// VARIABLES
+// ======================================================
+
+let movimientos = [];
+
+let movimientosFiltrados = [];
+
+let graficoFinanzas = null;
+
+let categorias = [
+
+  "Ventas",
+  "Señas",
+  "Cobro restante",
+  "Compra de bolsas",
+  "Tinta",
+  "Taller",
+  "Envíos",
+  "Publicidad",
+  "Meta Ads",
+  "Servicios",
+  "Impuestos",
+  "Monotributo",
+  "Equipamiento",
+  "Otros"
+
+];
+
+
+
+// ======================================================
+// FORMATO MONEDA
+// ======================================================
+
+function formatoMoneda(valor) {
+
+  return "$" + new Intl.NumberFormat("es-AR", {
+
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+
+  }).format(Number(valor) || 0);
+
+}
+
+// ======================================================
+// FORMATO DE FECHA
+// ======================================================
+
+function formatearFecha(fecha) {
+
+  if (!fecha) {
+    return "";
+  }
+
+  // Si PostgreSQL devuelve un timestamp como:
+  // 2026-08-25T03:00:00.000Z
+  // nos quedamos solamente con:
+  // 2026-08-25
+
+  const fechaTexto = String(fecha).substring(0, 10);
+
+  const partes = fechaTexto.split("-");
+
+  if (partes.length !== 3) {
+    return fechaTexto;
+  }
+
+  const [anio, mes, dia] = partes;
+
+  return `${dia}/${mes}/${anio}`;
+}
+
+
+
+// ======================================================
+// FECHA ACTUAL
+// ======================================================
+
+function fechaHoy() {
+
+  const ahora = new Date();
+
+  const offset =
+    ahora.getTimezoneOffset() * 60000;
+
+  return new Date(
+    ahora.getTime() - offset
+  ).toISOString().split("T")[0];
+
+}
+
+
+
+// ======================================================
+// CARGAR CATEGORIAS
+// ======================================================
+
+function cargarCategorias() {
+
+  const selectFiltro =
+    document.getElementById("filtroCategoria");
+
+  const selectModal =
+    document.getElementById("campoCategoria");
+
+
+  selectFiltro.innerHTML =
+    `<option value="">Todas</option>`;
+
+
+  selectModal.innerHTML =
+    `<option value="">Seleccionar categoría</option>`;
+
+
+  categorias.forEach(categoria => {
+
+    selectFiltro.innerHTML += `
+      <option value="${categoria}">
+        ${categoria}
+      </option>
+    `;
+
+
+    selectModal.innerHTML += `
+      <option value="${categoria}">
+        ${categoria}
+      </option>
+    `;
+
+  });
+
+}
+
+
+
+// ======================================================
+// CARGAR MOVIMIENTOS
+// ======================================================
+
+async function cargarMovimientos() {
+
+  try {
+
+    const respuesta =
+      await fetch("/movimientos-financieros");
+
+
+    if (!respuesta.ok) {
+
+      throw new Error(
+        "Error al obtener movimientos"
+      );
+
+    }
+
+
+    movimientos =
+      await respuesta.json();
+
+
+    movimientosFiltrados =
+      [...movimientos];
+
+
+    renderizarTodo();
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "No se pudieron cargar los movimientos"
+    );
+
+  }
+
+}
+
+
+
+// ======================================================
+// FILTROS
+// ======================================================
+
+function aplicarFiltros() {
+
+  const desde =
+    document.getElementById("filtroDesde").value;
+
+  const hasta =
+    document.getElementById("filtroHasta").value;
+
+  const tipo =
+    document.getElementById("filtroTipo").value;
+
+  const categoria =
+    document.getElementById("filtroCategoria").value;
+
+
+  movimientosFiltrados =
+    movimientos.filter(movimiento => {
+
+
+      if (
+        desde &&
+        movimiento.fecha < desde
+      ) {
+
+        return false;
+
+      }
+
+
+      if (
+        hasta &&
+        movimiento.fecha > hasta
+      ) {
+
+        return false;
+
+      }
+
+
+      if (
+        tipo &&
+        movimiento.tipo !== tipo
+      ) {
+
+        return false;
+
+      }
+
+
+      if (
+        categoria &&
+        movimiento.categoria !== categoria
+      ) {
+
+        return false;
+
+      }
+
+
+      return true;
+
+    });
+
+
+  renderizarTodo();
+
+}
+
+
+
+// ======================================================
+// LIMPIAR FILTROS
+// ======================================================
+
+function limpiarFiltros() {
+
+  document.getElementById("filtroDesde").value = "";
+
+  document.getElementById("filtroHasta").value = "";
+
+  document.getElementById("filtroTipo").value = "";
+
+  document.getElementById("filtroCategoria").value = "";
+
+
+  movimientosFiltrados =
+    [...movimientos];
+
+
+  renderizarTodo();
+
+}
+
+
+
+// ======================================================
+// RENDERIZAR TODO
+// ======================================================
+
+function renderizarTodo() {
+
+  actualizarResumen();
+
+  renderizarTabla();
+
+  actualizarGrafico();
+
+  actualizarResumenMensual();
+
+  actualizarEgresosPorCategoria();
+
+}
+
+
+
+// ======================================================
+// RESUMEN
+// ======================================================
+
+function actualizarResumen() {
+
+  let ingresos = 0;
+
+  let egresos = 0;
+
+
+  movimientosFiltrados.forEach(movimiento => {
+
+    const monto =
+      Number(movimiento.monto) || 0;
+
+
+    if (
+      movimiento.tipo === "ingreso"
+    ) {
+
+      ingresos += monto;
+
+    } else {
+
+      egresos += monto;
+
+    }
+
+  });
+
+
+  const neto =
+    ingresos - egresos;
+
+
+  document.getElementById(
+    "resumenIngresos"
+  ).textContent =
+    formatoMoneda(ingresos);
+
+
+  document.getElementById(
+    "resumenEgresos"
+  ).textContent =
+    formatoMoneda(egresos);
+
+
+  document.getElementById(
+    "resumenNeto"
+  ).textContent =
+    formatoMoneda(neto);
+
+
+  document.getElementById(
+    "resumenSaldo"
+  ).textContent =
+    formatoMoneda(neto);
+
+
+  const elemento =
+    document.getElementById("resumenNeto");
+
+
+  if (neto >= 0) {
+
+    elemento.classList.remove(
+      "text-red-600"
+    );
+
+    elemento.classList.add(
+      "text-green-600"
+    );
+
+  } else {
+
+    elemento.classList.remove(
+      "text-green-600"
+    );
+
+    elemento.classList.add(
+      "text-red-600"
+    );
+
+  }
+
+}
+
+
+
+// ======================================================
+// TABLA
+// ======================================================
+
+function renderizarTabla() {
+
+  const tbody =
+    document.getElementById(
+      "tablaMovimientos"
+    );
+
+
+  const busqueda =
+    document.getElementById(
+      "buscador"
+    ).value
+      .toLowerCase()
+      .trim();
+
+
+  const lista =
+    movimientosFiltrados.filter(movimiento => {
+
+      if (!busqueda) {
+        return true;
+      }
+
+
+      return [
+
+        movimiento.categoria,
+        movimiento.descripcion,
+        movimiento.medio_pago,
+        movimiento.cuenta,
+        movimiento.notas
+
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase()
+        .includes(busqueda);
+
+    });
+
+
+  if (lista.length === 0) {
+
+    tbody.innerHTML = `
+      <tr>
+
+        <td
+          colspan="7"
+          class="p-8 text-center text-gray-500">
+
+          No hay movimientos para mostrar.
+
+        </td>
+
+      </tr>
+    `;
+
+    return;
+
+  }
+
+
+  tbody.innerHTML =
+    lista.map(movimiento => {
+
+      const ingreso =
+        movimiento.tipo === "ingreso";
+
+
+      const colorTipo =
+        ingreso
+          ? "text-green-600"
+          : "text-red-600";
+
+
+      const simbolo =
+        ingreso
+          ? "+"
+          : "-";
+
+
+      const fecha = formatearFecha(movimiento.fecha);
+
+
+      return `
+
+        <tr class="border-b hover:bg-gray-50">
+
+          <td class="p-3">
+            ${fecha}
+          </td>
+
+
+          <td class="p-3">
+
+            <span class="${colorTipo} font-bold">
+
+              ${ingreso ? "🟢 Ingreso" : "🔴 Egreso"}
+
+            </span>
+
+          </td>
+
+
+          <td class="p-3 font-semibold">
+            ${movimiento.categoria || ""}
+          </td>
+
+
+          <td class="p-3">
+            ${movimiento.descripcion || "-"}
+          </td>
+
+
+          <td class="p-3">
+
+            ${movimiento.medio_pago || "-"}
+
+          </td>
+
+
+          <td
+            class="p-3 text-right font-bold ${colorTipo}">
+
+            ${simbolo}${formatoMoneda(movimiento.monto)}
+
+          </td>
+
+
+          <td class="p-3">
+
+            <div class="flex justify-center gap-2">
+
+              <button
+                onclick="editarMovimiento(${movimiento.id})"
+                class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3 py-1.5 rounded-lg">
+
+                ✏️
+
+              </button>
+
+
+              <button
+                onclick="eliminarMovimiento(${movimiento.id})"
+                class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg">
+
+                🗑️
+
+              </button>
+
+            </div>
+
+          </td>
+
+        </tr>
+
+      `;
+
+    }).join("");
+
+}
+
+
+
+// ======================================================
+// GRÁFICO
+// ======================================================
+
+// ======================================================
+// RESUMEN MENSUAL
+// ======================================================
+
+function actualizarResumenMensual() {
+
+  const meses = {};
+
+
+  movimientosFiltrados.forEach(movimiento => {
+
+    if (!movimiento.fecha) {
+      return;
+    }
+
+
+    // Tomamos directamente YYYY-MM-DD
+    // para evitar problemas de zona horaria
+
+    const fechaTexto =
+      String(movimiento.fecha).substring(0, 10);
+
+
+    const partes =
+      fechaTexto.split("-");
+
+
+    if (partes.length !== 3) {
+      return;
+    }
+
+
+    const anio =
+      partes[0];
+
+    const mes =
+      partes[1];
+
+
+    const clave =
+      `${anio}-${mes}`;
+
+
+    if (!meses[clave]) {
+
+      meses[clave] = {
+
+        ingresos: 0,
+        egresos: 0
+
+      };
+
+    }
+
+
+    const monto =
+      Number(movimiento.monto) || 0;
+
+
+    if (
+      movimiento.tipo === "ingreso"
+    ) {
+
+      meses[clave].ingresos += monto;
+
+    } else {
+
+      meses[clave].egresos += monto;
+
+    }
+
+  });
+
+
+  const claves =
+    Object.keys(meses)
+      .sort()
+      .reverse();
+
+
+  const tbody =
+    document.getElementById(
+      "tablaResumenMensual"
+    );
+
+
+  if (!tbody) {
+    return;
+  }
+
+
+  if (claves.length === 0) {
+
+    tbody.innerHTML = `
+      <tr>
+
+        <td
+          colspan="4"
+          class="p-6 text-center text-gray-500">
+
+          No hay movimientos para mostrar.
+
+        </td>
+
+      </tr>
+    `;
+
+    return;
+
+  }
+
+
+  tbody.innerHTML =
+    claves.map(clave => {
+
+      const datos =
+        meses[clave];
+
+
+      const resultado =
+        datos.ingresos -
+        datos.egresos;
+
+
+      const [anio, numeroMes] =
+        clave.split("-");
+
+
+      const mesesNombres = [
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Septiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre"
+];
+
+const nombreMes =
+  `${mesesNombres[Number(numeroMes) - 1]} ${anio}`;
+
+      const resultadoClase =
+        resultado >= 0
+          ? "text-green-600"
+          : "text-red-600";
+
+
+      return `
+
+        <tr class="border-b hover:bg-gray-50">
+
+          <td class="p-3 font-semibold capitalize">
+            ${nombreMes}
+          </td>
+
+
+          <td class="p-3 text-right font-semibold text-green-600">
+            ${formatoMoneda(datos.ingresos)}
+          </td>
+
+
+          <td class="p-3 text-right font-semibold text-red-600">
+            ${formatoMoneda(datos.egresos)}
+          </td>
+
+
+          <td class="p-3 text-right font-bold ${resultadoClase}">
+            ${formatoMoneda(resultado)}
+          </td>
+
+        </tr>
+
+      `;
+
+    }).join("");
+
+}
+
+
+
+// ======================================================
+// EGRESOS POR CATEGORÍA
+// ======================================================
+
+function actualizarEgresosPorCategoria() {
+
+  const categoriasEgresos = {};
+
+
+  movimientosFiltrados.forEach(movimiento => {
+
+    // Solamente egresos
+
+    if (
+      movimiento.tipo !== "egreso"
+    ) {
+
+      return;
+
+    }
+
+
+    const categoria =
+      movimiento.categoria ||
+      "Sin categoría";
+
+
+    const monto =
+      Number(movimiento.monto) || 0;
+
+
+    if (!categoriasEgresos[categoria]) {
+
+      categoriasEgresos[categoria] = 0;
+
+    }
+
+
+    categoriasEgresos[categoria] += monto;
+
+  });
+
+
+  const lista =
+    Object.entries(categoriasEgresos)
+      .sort((a, b) => b[1] - a[1]);
+
+
+  const contenedor =
+    document.getElementById(
+      "resumenCategorias"
+    );
+
+
+  if (!contenedor) {
+    return;
+  }
+
+
+  if (lista.length === 0) {
+
+    contenedor.innerHTML = `
+      <div class="text-center text-gray-500 py-5">
+        No hay egresos para mostrar.
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  const totalEgresos =
+    lista.reduce(
+      (total, item) => total + item[1],
+      0
+    );
+
+
+  contenedor.innerHTML =
+    lista.map(([categoria, monto]) => {
+
+      const porcentaje =
+        totalEgresos > 0
+          ? (monto / totalEgresos) * 100
+          : 0;
+
+
+      return `
+
+        <div>
+
+          <div class="flex justify-between items-center mb-1">
+
+            <span class="font-semibold">
+              ${categoria}
+            </span>
+
+
+            <div class="text-right">
+
+              <span class="font-bold">
+                ${formatoMoneda(monto)}
+              </span>
+
+              <span class="text-gray-500 text-sm ml-2">
+                ${porcentaje.toFixed(1)}%
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <div class="w-full bg-gray-200 rounded-full h-2">
+
+            <div
+              class="bg-red-500 h-2 rounded-full"
+              style="width: ${porcentaje}%">
+
+            </div>
+
+          </div>
+
+        </div>
+
+      `;
+
+    }).join("");
+
+}
+
+
+
+function actualizarGrafico() {
+
+  const porMes = {};
+
+
+  movimientosFiltrados.forEach(movimiento => {
+
+    const fecha =
+      new Date(movimiento.fecha);
+
+
+    const clave =
+      fecha.getFullYear() +
+      "-" +
+      String(
+        fecha.getMonth() + 1
+      ).padStart(2, "0");
+
+
+    if (!porMes[clave]) {
+
+      porMes[clave] = {
+        ingresos: 0,
+        egresos: 0
+      };
+
+    }
+
+
+    const monto =
+      Number(movimiento.monto) || 0;
+
+
+    if (
+      movimiento.tipo === "ingreso"
+    ) {
+
+      porMes[clave].ingresos += monto;
+
+    } else {
+
+      porMes[clave].egresos += monto;
+
+    }
+
+  });
+
+
+  const meses =
+    Object.keys(porMes)
+      .sort()
+      .slice(-12);
+
+
+  const nombresMeses =
+    meses.map(mes => {
+
+      const [anio, numero] =
+        mes.split("-");
+
+      const fecha =
+        new Date(
+          Number(anio),
+          Number(numero) - 1,
+          1
+        );
+
+
+      return fecha.toLocaleDateString(
+        "es-AR",
+        {
+          month: "short"
+        }
+      );
+
+    });
+
+
+  const ingresos =
+    meses.map(
+      mes => porMes[mes].ingresos
+    );
+
+
+  const egresos =
+    meses.map(
+      mes => porMes[mes].egresos
+    );
+
+
+  const contexto =
+    document
+      .getElementById("graficoFinanzas")
+      .getContext("2d");
+
+
+  if (graficoFinanzas) {
+
+    graficoFinanzas.destroy();
+
+  }
+
+
+  graficoFinanzas =
+    new Chart(contexto, {
+
+      type: "bar",
+
+      data: {
+
+        labels: nombresMeses,
+
+        datasets: [
+
+          {
+            label: "Ingresos",
+            data: ingresos
+          },
+
+          {
+            label: "Egresos",
+            data: egresos
+          }
+
+        ]
+
+      },
+
+      options: {
+
+        responsive: true,
+
+        maintainAspectRatio: false,
+
+        plugins: {
+
+          legend: {
+            position: "top"
+          }
+
+        },
+
+        scales: {
+
+          y: {
+
+            beginAtZero: true,
+
+            ticks: {
+
+              callback: function(valor) {
+
+                return formatoMoneda(valor);
+
+              }
+
+            }
+
+          }
+
+        }
+
+      }
+
+    });
+
+}
+
+
+
+// ======================================================
+// SECCIONES DESPLEGABLES
+// ======================================================
+
+function toggleSeccion(contenidoId, flechaId) {
+
+  const contenido = document.getElementById(contenidoId);
+  const flecha = document.getElementById(flechaId);
+
+  if (!contenido || !flecha) {
+    return;
+  }
+
+  const estaOculto = contenido.classList.contains("hidden");
+
+  if (estaOculto) {
+
+    contenido.classList.remove("hidden");
+
+    flecha.textContent = "▼";
+
+    // Si es el gráfico, reajustamos Chart.js
+    if (
+      contenidoId === "contenidoGrafico" &&
+      graficoFinanzas
+    ) {
+
+      setTimeout(() => {
+        graficoFinanzas.resize();
+      }, 50);
+
+    }
+
+  } else {
+
+    contenido.classList.add("hidden");
+
+    flecha.textContent = "▶";
+
+  }
+
+}
+
+// ======================================================
+// REGLA 50 / 30 / 20
+// ======================================================
+
+function abrirModalRegla503020() {
+
+  const modal =
+    document.getElementById("modal503020");
+
+  const input =
+    document.getElementById("monto503020");
+
+  const resultado =
+    document.getElementById("resultado503020");
+
+
+  // Limpiar valores anteriores
+
+  input.value = "";
+
+  resultado.classList.add("hidden");
+
+
+  document.getElementById("resultado50").textContent = "$0";
+
+  document.getElementById("resultado30").textContent = "$0";
+
+  document.getElementById("resultado20").textContent = "$0";
+
+  document.getElementById("resultadoTotal").textContent = "$0";
+
+
+  modal.classList.remove("hidden");
+
+
+  // Enfocar automáticamente el monto
+
+  setTimeout(() => {
+
+    input.focus();
+
+  }, 50);
+
+}
+
+
+
+// ======================================================
+// CERRAR REGLA 50 / 30 / 20
+// ======================================================
+
+function cerrarModalRegla503020() {
+
+  document
+    .getElementById("modal503020")
+    .classList.add("hidden");
+
+}
+
+
+
+// ======================================================
+// CALCULAR 50 / 30 / 20
+// ======================================================
+
+function calcular503020() {
+
+  const input =
+    document.getElementById("monto503020");
+
+
+  const monto =
+    Number(input.value);
+
+
+  // Validar
+
+  if (
+    !Number.isFinite(monto) ||
+    monto <= 0
+  ) {
+
+    alert(
+      "Ingresá un monto válido mayor a $0."
+    );
+
+    input.focus();
+
+    return;
+
+  }
+
+
+  // Calcular porcentajes
+
+  const servicios =
+    monto * 0.50;
+
+
+  const ahorro =
+    monto * 0.30;
+
+
+  const gustos =
+    monto * 0.20;
+
+
+  // Mostrar resultados
+
+  document.getElementById(
+    "resultado50"
+  ).textContent =
+    formatoMoneda(servicios);
+
+
+  document.getElementById(
+    "resultado30"
+  ).textContent =
+    formatoMoneda(ahorro);
+
+
+  document.getElementById(
+    "resultado20"
+  ).textContent =
+    formatoMoneda(gustos);
+
+
+  document.getElementById(
+    "resultadoTotal"
+  ).textContent =
+    formatoMoneda(
+      servicios +
+      ahorro +
+      gustos
+    );
+
+
+  // Mostrar resultados
+
+  document
+    .getElementById("resultado503020")
+    .classList.remove("hidden");
+
+}
+
+// ======================================================
+// ABRIR MODAL
+// ======================================================
+
+function abrirModal(tipo, id = null) {
+
+  const modal =
+    document.getElementById(
+      "modalMovimiento"
+    );
+
+
+  document.getElementById(
+    "formMovimiento"
+  ).reset();
+
+
+  document.getElementById(
+    "movimientoId"
+  ).value = "";
+
+
+  document.getElementById(
+    "movimientoTipo"
+  ).value = tipo;
+
+
+  document.getElementById(
+    "campoFecha"
+  ).value = fechaHoy();
+
+
+  document.getElementById(
+    "tituloModal"
+  ).textContent =
+    tipo === "ingreso"
+      ? "Nuevo ingreso"
+      : "Nuevo egreso";
+
+
+  document.getElementById(
+    "btnGuardarMovimiento"
+  ).textContent =
+    tipo === "ingreso"
+      ? "Guardar ingreso"
+      : "Guardar egreso";
+
+
+  modal.classList.remove("hidden");
+
+}
+
+
+
+// ======================================================
+// CERRAR MODAL
+// ======================================================
+
+function cerrarModal() {
+
+  document
+    .getElementById(
+      "modalMovimiento"
+    )
+    .classList.add("hidden");
+
+}
+
+
+
+// ======================================================
+// EDITAR MOVIMIENTO
+// ======================================================
+
+function editarMovimiento(id) {
+
+  const movimiento =
+    movimientos.find(
+      item => item.id === id
+    );
+
+
+  if (!movimiento) {
+
+    return;
+
+  }
+
+
+  document.getElementById(
+    "movimientoId"
+  ).value =
+    movimiento.id;
+
+
+  document.getElementById(
+    "movimientoTipo"
+  ).value =
+    movimiento.tipo;
+
+
+  document.getElementById(
+    "campoFecha"
+  ).value =
+    movimiento.fecha;
+
+
+  document.getElementById(
+    "campoCategoria"
+  ).value =
+    movimiento.categoria;
+
+
+  document.getElementById(
+    "campoDescripcion"
+  ).value =
+    movimiento.descripcion || "";
+
+
+  document.getElementById(
+    "campoMonto"
+  ).value =
+    movimiento.monto;
+
+
+  document.getElementById(
+    "campoMedio"
+  ).value =
+    movimiento.medio_pago || "";
+
+
+  document.getElementById(
+    "campoCuenta"
+  ).value =
+    movimiento.cuenta || "";
+
+
+  document.getElementById(
+    "campoComprobante"
+  ).value =
+    movimiento.comprobante || "";
+
+
+  document.getElementById(
+    "campoNotas"
+  ).value =
+    movimiento.notas || "";
+
+
+  document.getElementById(
+    "tituloModal"
+  ).textContent =
+    "Editar movimiento";
+
+
+  document.getElementById(
+    "btnGuardarMovimiento"
+  ).textContent =
+    "Guardar cambios";
+
+
+  document
+    .getElementById(
+      "modalMovimiento"
+    )
+    .classList.remove("hidden");
+
+}
+
+
+
+// ======================================================
+// GUARDAR MOVIMIENTO
+// ======================================================
+
+async function guardarMovimiento(event) {
+
+  event.preventDefault();
+
+
+  const id =
+    document.getElementById(
+      "movimientoId"
+    ).value;
+
+
+  const datos = {
+
+    fecha:
+      document.getElementById(
+        "campoFecha"
+      ).value,
+
+    tipo:
+      document.getElementById(
+        "movimientoTipo"
+      ).value,
+
+    categoria:
+      document.getElementById(
+        "campoCategoria"
+      ).value,
+
+    descripcion:
+      document.getElementById(
+        "campoDescripcion"
+      ).value,
+
+    monto:
+      Number(
+        document.getElementById(
+          "campoMonto"
+        ).value
+      ),
+
+    medio_pago:
+      document.getElementById(
+        "campoMedio"
+      ).value,
+
+    cuenta:
+      document.getElementById(
+        "campoCuenta"
+      ).value,
+
+    comprobante:
+      document.getElementById(
+        "campoComprobante"
+      ).value,
+
+    notas:
+      document.getElementById(
+        "campoNotas"
+      ).value
+
+  };
+
+
+  try {
+
+    const respuesta =
+      await fetch(
+
+        id
+          ? `/movimientos-financieros/${id}`
+          : "/movimientos-financieros",
+
+        {
+
+          method:
+            id
+              ? "PUT"
+              : "POST",
+
+          headers: {
+
+            "Content-Type":
+              "application/json"
+
+          },
+
+          body:
+            JSON.stringify(datos)
+
+        }
+
+      );
+
+
+    const resultado =
+      await respuesta.json();
+
+
+    if (!respuesta.ok) {
+
+      throw new Error(
+        resultado.error ||
+        "Error al guardar"
+      );
+
+    }
+
+
+    cerrarModal();
+
+    await cargarMovimientos();
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      error.message ||
+      "Error al guardar movimiento"
+    );
+
+  }
+
+}
+
+
+
+// ======================================================
+// ELIMINAR MOVIMIENTO
+// ======================================================
+
+async function eliminarMovimiento(id) {
+
+  const confirmar =
+    confirm(
+      "¿Seguro que querés eliminar este movimiento?"
+    );
+
+
+  if (!confirmar) {
+
+    return;
+
+  }
+
+
+  try {
+
+    const respuesta =
+      await fetch(
+        `/movimientos-financieros/${id}`,
+        {
+          method: "DELETE"
+        }
+      );
+
+
+    const resultado =
+      await respuesta.json();
+
+
+    if (!respuesta.ok) {
+
+      throw new Error(
+        resultado.error ||
+        "Error al eliminar"
+      );
+
+    }
+
+
+    await cargarMovimientos();
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      error.message ||
+      "Error al eliminar movimiento"
+    );
+
+  }
+
+}
+
+
+
+// ======================================================
+// INICIALIZAR
+// ======================================================
+
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+
+    cargarCategorias();
+
+    cargarMovimientos();
+
+  }
+);
+
+
+</script>
+
+</body>
+</html>
