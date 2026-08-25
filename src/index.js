@@ -26,16 +26,6 @@ app.get("/clientes", async (req, res) => {
   }
 });
 
-// Obtener productos
-app.get("/productos", async (req, res) => {
-  try {
-    const result = await pool.query("SELECT * FROM productos ORDER BY id ASC");
-    res.json(result.rows);
-  } catch (error) {
-    console.error("Error:", error);
-    res.status(500).json({ error: "Error al obtener productos" });
-  }
-});
 
 // Obtener ventas
 app.get("/ventas", async (req, res) => {
@@ -439,22 +429,7 @@ const archivo_codigo = `CL-${numero.toString().padStart(4, "0")}`;
   }
 });
 
-app.get("/precios-pack/:productoId", async (req, res) => {
-  try {
-    const { productoId } = req.params;
 
-    const result = await pool.query(
-      "SELECT cantidad, precio_total FROM precios_pack WHERE producto_id = $1 ORDER BY cantidad ASC",
-      [productoId]
-    );
-
-    res.json(result.rows);
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error al obtener packs" });
-  }
-});
 
 app.delete("/ventas/:id", async (req, res) => {
   try {
@@ -498,27 +473,7 @@ app.put("/ventas/:id/etapa", async (req, res) => {
   }
 });
 
-app.put("/ventas/:id/fecha-entrega", async (req, res) => {
-  try {
 
-    const { id } = req.params;
-    const { fecha_entrega } = req.body;
-
-    const result = await pool.query(
-      `UPDATE ventas
-       SET fecha_entrega = $1
-       WHERE id = $2
-       RETURNING *`,
-      [fecha_entrega, id]
-    );
-
-    res.json(result.rows[0]);
-
-  } catch (error) {
-    console.error("Error actualizando fecha:", error);
-    res.status(500).json({ error: "Error al actualizar fecha de entrega" });
-  }
-});
 
 app.listen(process.env.PORT, () => {
   console.log("Servidor corriendo en puerto", process.env.PORT);
@@ -547,22 +502,7 @@ app.put("/ventas/:id/factura", async (req, res) => {
 });
 
 
-app.get("/precios-pack/:productoId", async (req, res) => {
-  try {
-    const { productoId } = req.params;
 
-    const result = await pool.query(
-      "SELECT cantidad, precio_total FROM precios_pack WHERE producto_id = $1 ORDER BY cantidad ASC",
-      [productoId]
-    );
-
-    res.json(result.rows);
-
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error al obtener packs" });
-  }
-});
 
 app.put("/clientes/:id", async (req, res) => {
   try {
@@ -694,28 +634,110 @@ app.get("/precios-pack/:id", async (req, res) => {
   res.json(result.rows);
 });
 
-app.put("/config/guardar", async (req, res) => {
 
-  const { producto_id, costo_unitario, cantidad, precio_total } = req.body;
+// ==========================================
+// GUARDAR TODOS LOS PRECIOS DE LA PLANILLA
+// ==========================================
 
-  // Actualizar costo unitario
-  await pool.query(`
-    UPDATE productos
-    SET costo_unitario = $1
-    WHERE id = $2
-  `, [costo_unitario, producto_id]);
+app.put("/config/guardar-todos", async (req, res) => {
 
-  // Actualizar precio pack
-  await pool.query(`
-    UPDATE precios_pack
-    SET precio_total = $1,
-        updated_at = NOW()
-    WHERE producto_id = $2
-    AND cantidad = $3
-  `, [precio_total, producto_id, cantidad]);
+  const { productos } = req.body;
 
-  res.json({ ok: true });
+  if (!Array.isArray(productos)) {
+
+    return res.status(400).json({
+      error: "Formato de datos inválido"
+    });
+
+  }
+
+  const client = await pool.connect();
+
+  try {
+
+    // Comenzamos una transacción
+    await client.query("BEGIN");
+
+
+    // Recorrer todos los productos
+    for (const producto of productos) {
+
+      // --------------------------------------
+      // ACTUALIZAR COSTO UNITARIO
+      // --------------------------------------
+
+      await client.query(`
+        UPDATE productos
+        SET costo_unitario = $1
+        WHERE id = $2
+      `, [
+
+        producto.costo_unitario,
+        producto.producto_id
+
+      ]);
+
+
+      // --------------------------------------
+      // ACTUALIZAR PRECIOS DE LOS PACKS
+      // --------------------------------------
+
+      for (const pack of producto.packs) {
+
+        await client.query(`
+          UPDATE precios_pack
+          SET precio_total = $1,
+              updated_at = NOW()
+          WHERE producto_id = $2
+            AND cantidad = $3
+        `, [
+
+          pack.precio_total,
+          producto.producto_id,
+          pack.cantidad
+
+        ]);
+
+      }
+
+    }
+
+
+    // Si todo salió bien
+    await client.query("COMMIT");
+
+
+    res.json({
+      ok: true,
+      message: "Todos los precios fueron guardados correctamente"
+    });
+
+
+  } catch (error) {
+
+    // Si algo falla, deshacer TODO
+    await client.query("ROLLBACK");
+
+    console.error(
+      "Error guardando configuración:",
+      error
+    );
+
+
+    res.status(500).json({
+      error: "Error al guardar los precios"
+    });
+
+
+  } finally {
+
+    client.release();
+
+  }
+
 });
+
+
 
 app.post("/meses", async (req, res) => {
   try {

@@ -685,42 +685,80 @@ ventas.forEach(v => {
 // =============================
 
 Object.values(ventasPorMes).forEach(mes => {
-  // 🔥 Calcular ganancia neta del mes
-const gananciaNetaMes = mes.ventas.reduce(
-  (acc, v) => acc + Number(v.ganancia_personal),
-  0
-);
 
-// 🔥 Contar clientes únicos del mes
-const clientesUnicos = new Set(
-  mes.ventas.map(v => v.cliente_id)
-).size;
+  // =============================
+  // MÉTRICAS DEL MES
+  // =============================
 
-  // 🔹 HEADER DEL MES
+  // Ganancia neta del mes
+  const gananciaNetaMes = mes.ventas.reduce(
+    (acc, v) => acc + Number(v.ganancia_personal || 0),
+    0
+  );
+
+  // Facturación del mes
+  const facturacionMes = mes.ventas.reduce(
+    (acc, v) => acc + Number(v.precio_final || 0),
+    0
+  );
+
+  // Cantidad de bolsas vendidas
+  const bolsasMes = mes.ventas.reduce(
+    (acc, v) => acc + Number(v.cantidad || 0),
+    0
+  );
+
+  // Porcentaje de profit
+  const profitMes = facturacionMes > 0
+    ? (gananciaNetaMes / facturacionMes) * 100
+    : 0;
+
+  // Clientes únicos del mes
+  const clientesUnicos = new Set(
+    mes.ventas.map(v => v.cliente_id)
+  ).size;
+
+
+  // =============================
+  // HEADER DEL MES
+  // =============================
+
   const headerRow = document.createElement("tr");
   headerRow.className = "fila-mes font-bold cursor-pointer";
 
   headerRow.innerHTML = `
-<td colspan="21" class="px-3 py-2">
-  <div class="flex items-center gap-6">
+    <td colspan="21" class="px-3 py-2">
+      <div class="flex items-center gap-6 flex-wrap">
 
-    <span class="flecha">▼</span>
+        <span class="flecha">▼</span>
 
-    <span class="font-semibold">
-      ${mes.nombre}
-    </span>
+        <span class="font-semibold">
+          ${mes.nombre}
+        </span>
 
-    <span class="text-sky-50 font-semibold">
-      Ganancia neta: $${formatearPesos(gananciaNetaMes)}
-    </span>
+        <span class="text-sky-50 font-semibold">
+          Ganancia neta: $${formatearPesos(gananciaNetaMes)}
+        </span>
 
-    <span class="text-sky-50 font-semibold">
-      Clientes: ${clientesUnicos}
-    </span>
+        <span class="text-sky-50 font-semibold">
+          Clientes: ${clientesUnicos}
+        </span>
 
-  </div>
-</td>
-`;
+        <span class="text-sky-50 font-semibold">
+          Bolsas: ${formatearPesos(bolsasMes)}
+        </span>
+
+        <span class="text-sky-50 font-semibold">
+          Facturación: $${formatearPesos(facturacionMes)}
+        </span>
+
+        <span class="text-sky-50 font-semibold">
+          Profit: ${profitMes.toFixed(1)}%
+        </span>
+
+      </div>
+    </td>
+  `;
 
   tabla.appendChild(headerRow);
 
@@ -1418,106 +1456,536 @@ function cerrarModalConfig() {
   document.getElementById("modalConfig").classList.add("hidden");
 }
 
+
+
+// ==========================================
+// CONFIGURACIÓN DE PRECIOS - NUEVA PLANILLA
+// ==========================================
+
+function formatearPrecioInput(valor) {
+  if (valor === null || valor === undefined || valor === "") {
+    return "$0";
+  }
+
+  const numero = Number(valor);
+
+  if (isNaN(numero)) {
+    return "$0";
+  }
+
+  return "$" + new Intl.NumberFormat("es-AR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  }).format(numero);
+}
+
+
+
 async function cargarConfigProductos() {
-  const res = await fetch("/productos");
-  const productos = await res.json();
 
-  const select = document.getElementById("configProducto");
-  select.innerHTML = "";
+  const tabla = document.getElementById("tablaConfigPrecios");
 
-  productos.forEach(p => {
-    const option = document.createElement("option");
-    option.value = p.id;
-    option.textContent = p.tamano + " " + p.tipo_asa;
-    select.appendChild(option);
-  });
-
-  cargarDatosProducto();
-}
-
-document.addEventListener("DOMContentLoaded", function () {
-
-  const selectProducto = document.getElementById("configProducto");
-  if (selectProducto) {
-    selectProducto.addEventListener("change", cargarDatosProducto);
+  if (!tabla) {
+    console.error("No existe #tablaConfigPrecios");
+    return;
   }
 
-  const selectPack = document.getElementById("configPack");
-  if (selectPack) {
-    selectPack.addEventListener("change", cargarPrecioPack);
+  tabla.innerHTML = `
+    <tr>
+      <td colspan="8" class="text-center py-8 text-gray-500">
+        Cargando precios...
+      </td>
+    </tr>
+  `;
+
+  try {
+
+    // Obtener todos los productos
+    const resProductos = await fetch("/productos");
+    const productos = await resProductos.json();
+
+    // Obtener los packs de cada producto
+    const filas = await Promise.all(
+
+      productos.map(async (producto) => {
+
+        const resPacks =
+          await fetch(`/precios-pack/${producto.id}`);
+
+        const packs = await resPacks.json();
+
+        // Guardar los precios por cantidad
+        const precios = {};
+
+        packs.forEach(pack => {
+
+          precios[pack.cantidad] =
+            pack.precio_total;
+
+        });
+
+        return {
+          ...producto,
+          precios
+        };
+
+      })
+
+    );
+
+    // Limpiar tabla
+    tabla.innerHTML = "";
+
+
+    // Crear una fila para cada producto
+    filas.forEach(producto => {
+
+      const fila = document.createElement("tr");
+
+      fila.className =
+        "border-b hover:bg-gray-50";
+
+
+      fila.innerHTML = `
+
+        <!-- PRODUCTO -->
+
+        <td class="px-3 py-2 font-semibold whitespace-nowrap">
+
+          ${producto.tamano}
+          ${producto.tipo_asa}
+
+          <input
+            type="hidden"
+            class="config-producto-id"
+            value="${producto.id}"
+          >
+
+        </td>
+
+
+        <!-- COSTO UNITARIO -->
+
+        <td class="px-2 py-2">
+
+          <input
+  type="text"
+  inputmode="decimal"
+  class="config-costo w-28 border rounded-lg px-2 py-2 text-center"
+  data-producto-id="${producto.id}"
+  value="${formatearPrecioInput(producto.costo_unitario ?? 0)}"
+  onfocus="this.value = this.value.replace(/[^0-9,.-]/g, '').replace(/\./g, '')"
+  onblur="this.value = formatearPrecioInput(this.value.replace(/\./g, '').replace(',', '.'))"
+>
+
+        </td>
+
+
+        <!-- PACK 50 -->
+
+        <td class="px-2 py-2">
+
+          <input
+  type="text"
+  inputmode="numeric"
+  class="config-precio w-28 border rounded-lg px-2 py-2 text-center"
+  data-producto-id="${producto.id}"
+  data-cantidad="50"
+  value="${formatearPrecioInput(producto.precios[50] ?? 0)}"
+  onfocus="this.value = this.value.replace(/[^0-9]/g, '')"
+  onblur="this.value = formatearPrecioInput(this.value)"
+>
+
+        </td>
+
+
+        <!-- PACK 100 -->
+
+        <td class="px-2 py-2">
+
+          <input
+  type="text"
+  inputmode="numeric"
+  class="config-precio w-28 border rounded-lg px-2 py-2 text-center"
+  data-producto-id="${producto.id}"
+  data-cantidad="100"
+  value="${formatearPrecioInput(producto.precios[100] ?? 0)}"
+  onfocus="this.value = this.value.replace(/[^0-9]/g, '')"
+  onblur="this.value = formatearPrecioInput(this.value)"
+>
+
+        </td>
+
+
+        <!-- PACK 200 -->
+
+        <td class="px-2 py-2">
+
+          <input
+  type="text"
+  inputmode="numeric"
+  class="config-precio w-28 border rounded-lg px-2 py-2 text-center"
+  data-producto-id="${producto.id}"
+  data-cantidad="200"
+  value="${formatearPrecioInput(producto.precios[200] ?? 0)}"
+  onfocus="this.value = this.value.replace(/[^0-9]/g, '')"
+  onblur="this.value = formatearPrecioInput(this.value)"
+>
+
+        </td>
+
+
+        <!-- PACK 300 -->
+
+        <td class="px-2 py-2">
+
+          <input
+  type="text"
+  inputmode="numeric"
+  class="config-precio w-28 border rounded-lg px-2 py-2 text-center"
+  data-producto-id="${producto.id}"
+  data-cantidad="300"
+  value="${formatearPrecioInput(producto.precios[300] ?? 0)}"
+  onfocus="this.value = this.value.replace(/[^0-9]/g, '')"
+  onblur="this.value = formatearPrecioInput(this.value)"
+>
+
+        </td>
+
+
+        <!-- PACK 400 -->
+
+        <td class="px-2 py-2">
+
+          <input
+  type="text"
+  inputmode="numeric"
+  class="config-precio w-28 border rounded-lg px-2 py-2 text-center"
+  data-producto-id="${producto.id}"
+  data-cantidad="400"
+  value="${formatearPrecioInput(producto.precios[400] ?? 0)}"
+  onfocus="this.value = this.value.replace(/[^0-9]/g, '')"
+  onblur="this.value = formatearPrecioInput(this.value)"
+>
+
+        </td>
+
+
+        <!-- PACK 500 -->
+
+        <td class="px-2 py-2">
+
+          <input
+  type="text"
+  inputmode="numeric"
+  class="config-precio w-28 border rounded-lg px-2 py-2 text-center"
+  data-producto-id="${producto.id}"
+  data-cantidad="500"
+  value="${formatearPrecioInput(producto.precios[500] ?? 0)}"
+  onfocus="this.value = this.value.replace(/[^0-9]/g, '')"
+  onblur="this.value = formatearPrecioInput(this.value)"
+>
+
+        </td>
+
+      `;
+
+      tabla.appendChild(fila);
+
+    });
+
+
+    // Mostrar cantidad de productos
+    const estado =
+      document.getElementById("estadoConfigPrecios");
+
+    if (estado) {
+
+      estado.textContent =
+        `${filas.length} productos cargados`;
+
+    }
+
+
+  } catch (error) {
+
+    console.error(
+      "Error cargando configuración:",
+      error
+    );
+
+    tabla.innerHTML = `
+      <tr>
+        <td
+          colspan="8"
+          class="text-center py-8 text-red-500"
+        >
+          Error al cargar los precios.
+        </td>
+      </tr>
+    `;
+
   }
 
-});
+}
 
-  async function cargarDatosProducto() {
 
-  const productoId = document.getElementById("configProducto").value;
+// ==========================================
+// AUMENTAR 2% TODOS LOS PRECIOS
+// ==========================================
 
-  const resProd = await fetch("/productos");
-  const productos = await resProd.json();
+function aumentarTodosLosPrecios2() {
 
-  const producto = productos.find(p => p.id == productoId);
+  const confirmar = confirm(
+    "¿Estás seguro de que querés aumentar un 2% TODOS los precios de los packs?\n\n" +
+    "Después del aumento, los precios se redondearán al próximo múltiplo de $1.000.\n\n" +
+    "Ejemplo:\n" +
+    "$27.000 → $27.540 → $28.000"
+  );
 
-  document.getElementById("configCostoUnitario").value =
-    producto.costo_unitario;
+  if (!confirmar) {
+    return;
+  }
 
-  const resPack = await fetch(`/precios-pack/${productoId}`);
-  const packs = await resPack.json();
 
-  const selectPack = document.getElementById("configPack");
-  selectPack.innerHTML = "";
+  // Buscar todos los precios de packs
+  const precios =
+    document.querySelectorAll(".config-precio");
 
-  packs.forEach(p => {
-    const option = document.createElement("option");
-    option.value = p.cantidad;
-    option.textContent = p.cantidad;
-    selectPack.appendChild(option);
+
+  precios.forEach(input => {
+
+    // Obtener el valor actual
+    let valor =
+      input.value
+        .replace("$", "")
+        .replace(/\./g, "")
+        .replace(",", ".")
+        .trim();
+
+
+    let numero =
+      Number(valor);
+
+
+    // Si no es un número válido, no modificarlo
+    if (isNaN(numero)) {
+      return;
+    }
+
+
+    // Aplicar aumento del 2%
+    const aumentado =
+      numero * 1.02;
+
+
+    // Redondear HACIA ARRIBA al próximo $1.000
+    const redondeado =
+      Math.ceil(aumentado / 1000) * 1000;
+
+
+    // Mostrar nuevamente con formato argentino
+    input.value =
+      formatearPrecioInput(redondeado);
+
   });
 
-  cargarPrecioPack();
+
+  // Mostrar mensaje de confirmación dentro del modal
+  const estado =
+    document.getElementById("estadoConfigPrecios");
+
+
+  if (estado) {
+
+    estado.textContent =
+      "✓ Precios aumentados un 2% y redondeados a $1.000";
+
+    estado.className =
+      "text-sm text-green-600 font-semibold";
+
+  }
+
 }
 
 
+async function guardarTodosLosPrecios() {
 
-  async function cargarPrecioPack() {
+  const boton =
+    document.getElementById("btnGuardarTodosPrecios");
 
-  const productoId = document.getElementById("configProducto").value;
-  const pack = document.getElementById("configPack").value;
+  const estado =
+    document.getElementById("estadoConfigPrecios");
 
-  const res = await fetch(`/precios-pack/${productoId}`);
-  const packs = await res.json();
 
-  const seleccionado = packs.find(p => p.cantidad == pack);
+  boton.disabled = true;
 
-  document.getElementById("configPrecioPack").value =
-    seleccionado.precio_total;
+  boton.textContent = "Guardando...";
+
+  estado.textContent =
+    "Guardando todos los precios...";
+
+
+  try {
+
+    const costos =
+      document.querySelectorAll(".config-costo");
+
+    const precios =
+      document.querySelectorAll(".config-precio");
+
+
+    const productosMap = {};
+
+
+    // ==========================================
+    // RECORRER COSTOS
+    // ==========================================
+
+    costos.forEach(input => {
+
+      const productoId =
+        input.dataset.productoId;
+
+
+      productosMap[productoId] = {
+
+        producto_id:
+          Number(productoId),
+
+        costo_unitario:
+  Number(
+    input.value
+      .replace("$", "")
+      .replace(/\./g, "")
+      .replace(",", ".")
+  ),
+
+        packs: []
+
+      };
+
+    });
+
+
+    // ==========================================
+    // RECORRER PRECIOS
+    // ==========================================
+
+    precios.forEach(input => {
+
+      const productoId =
+        input.dataset.productoId;
+
+      const cantidad =
+        Number(input.dataset.cantidad);
+
+      const precio = Number(
+  input.value
+    .replace("$", "")
+    .replace(/\./g, "")
+    .replace(",", ".")
+);
+
+
+      productosMap[productoId].packs.push({
+
+        cantidad:
+          cantidad,
+
+        precio_total:
+          precio
+
+      });
+
+    });
+
+
+    // Convertir objeto a array
+    const productos =
+      Object.values(productosMap);
+
+
+    // ==========================================
+    // ENVIAR AL BACKEND
+    // ==========================================
+
+    const response =
+      await fetch("/config/guardar-todos", {
+
+        method: "PUT",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          productos
+        })
+
+      });
+
+
+    const data =
+      await response.json();
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        data.error ||
+        "Error al guardar"
+      );
+
+    }
+
+
+    // ==========================================
+    // ÉXITO
+    // ==========================================
+
+    estado.textContent =
+      "✓ Todos los precios fueron guardados correctamente";
+
+    estado.className =
+      "text-sm text-green-600 font-semibold";
+
+
+    boton.textContent =
+      "✓ Guardado";
+
+
+    setTimeout(() => {
+
+      boton.textContent =
+        "💾 Guardar todos los cambios";
+
+      boton.disabled = false;
+
+    }, 1500);
+
+
+  } catch (error) {
+
+    console.error(error);
+
+
+    estado.textContent =
+      "✕ Error al guardar los precios";
+
+    estado.className =
+      "text-sm text-red-600 font-semibold";
+
+
+    boton.textContent =
+      "💾 Guardar todos los cambios";
+
+    boton.disabled = false;
+
+  }
+
 }
 
-async function guardarConfig() {
-
-  const productoId = document.getElementById("configProducto").value;
-  const costoUnitario = document.getElementById("configCostoUnitario").value;
-  const pack = document.getElementById("configPack").value;
-  const precioFinal = document.getElementById("configPrecioPack").value;
-
-  await fetch("/config/guardar", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      producto_id: productoId,
-      costo_unitario: costoUnitario,
-      cantidad: pack,
-      precio_total: precioFinal
-    })
-  });
-
-  alert("Configuración actualizada correctamente");
-
-  cerrarModalConfig();
-
-  // recargar ventas automáticamente
-  await cargarVentas();
-}
 
 function abrirModalCopys() {
   const modal = document.getElementById("modalCopys");
@@ -2640,92 +3108,127 @@ window.editarPrecio = function(td, id, precioActual) {
   </div>
 </div>
 
-<div id="modalConfig" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center">
+<!-- MODAL CONFIGURACIÓN DE PRECIOS -->
+<div id="modalConfig"
+     class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50">
 
-  <div class="bg-white w-[600px] rounded-lg shadow-lg p-6">
+  <div class="bg-white w-[95vw] max-w-[1400px] max-h-[90vh] rounded-2xl shadow-xl p-6 flex flex-col">
 
+    <!-- HEADER -->
     <div class="flex justify-between items-center mb-4">
-      <h2 class="text-xl font-bold">Configuración</h2>
-      <button onclick="cerrarModalConfig()">✕</button>
-    </div>
-
-    <div class="grid grid-cols-2 gap-4">
 
       <div>
-        <label>Tamaño</label>
-        <select id="configProducto" class="w-full border rounded px-2 py-1"></select>
+        <h2 class="text-xl font-bold">
+          Configuración de Precios
+        </h2>
+
+        <p class="text-sm text-gray-500 mt-1">
+          Modificá costos y precios de todos los productos desde una sola planilla.
+        </p>
       </div>
 
-      <div>
-        <label>Costo unitario</label>
-        <input type="number" id="configCostoUnitario" class="w-full border rounded px-2 py-1">
-      </div>
-
-      <div>
-        <label>Pack</label>
-        <select id="configPack" class="w-full border rounded px-2 py-1"></select>
-      </div>
-
-      <div>
-        <label>Precio final pack</label>
-        <input type="number" id="configPrecioPack" class="w-full border rounded px-2 py-1">
-      </div>
-
-    </div>
-
-    <div class="mt-6 text-right">
-      <button onclick="guardarConfig()" 
-        class="bg-indigo-600 text-white px-4 py-2 rounded">
-        Guardar
+      <button
+        onclick="cerrarModalConfig()"
+        class="text-gray-500 hover:text-black text-xl">
+        ✕
       </button>
+
+    </div>
+
+    <!-- TABLA -->
+    <div class="overflow-auto border rounded-xl flex-1">
+
+      <table class="w-full border-collapse text-sm">
+
+        <thead class="sticky top-0 z-10">
+
+          <tr class="bg-slate-800 text-white">
+
+            <th class="px-3 py-3 text-left whitespace-nowrap">
+              Producto
+            </th>
+
+            <th class="px-3 py-3 text-center whitespace-nowrap">
+              Costo unitario
+            </th>
+
+            <th class="px-3 py-3 text-center">
+              Pack 50
+            </th>
+
+            <th class="px-3 py-3 text-center">
+              Pack 100
+            </th>
+
+            <th class="px-3 py-3 text-center">
+              Pack 200
+            </th>
+
+            <th class="px-3 py-3 text-center">
+              Pack 300
+            </th>
+
+            <th class="px-3 py-3 text-center">
+              Pack 400
+            </th>
+
+            <th class="px-3 py-3 text-center">
+              Pack 500
+            </th>
+
+          </tr>
+
+        </thead>
+
+        <tbody id="tablaConfigPrecios">
+
+          <!-- Se genera automáticamente -->
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <!-- FOOTER -->
+
+    <div class="flex justify-between items-center mt-5">
+
+      <span
+        id="estadoConfigPrecios"
+        class="text-sm text-gray-500">
+      </span>
+
+      <div class="flex gap-3">
+
+  <button
+    onclick="cerrarModalConfig()"
+    class="bg-gray-200 hover:bg-gray-300 px-5 py-2 rounded-lg">
+    Cancelar
+  </button>
+
+  <button
+    onclick="aumentarTodosLosPrecios2()"
+    class="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-lg font-semibold">
+    📈 AUMENTAR 2% TODOS LOS PRECIOS
+  </button>
+
+  <button
+    id="btnGuardarTodosPrecios"
+    onclick="guardarTodosLosPrecios()"
+    class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-semibold">
+    💾 Guardar todos los cambios
+  </button>
+
+</div>
+
     </div>
 
   </div>
 
 </div>
 
-<div id="modalConfig" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center">
 
-  <div class="bg-white w-[700px] rounded-xl shadow-xl p-6">
-
-    <div class="flex justify-between items-center mb-4">
-      <h2 class="text-xl font-bold">Configuración de Precios</h2>
-      <button onclick="cerrarModalConfig()">✕</button>
-    </div>
-
-    <div class="grid grid-cols-2 gap-4">
-
-      <div>
-        <label class="text-sm font-semibold">Tamaño</label>
-        <select id="configProducto" class="w-full border rounded px-2 py-1"></select>
-      </div>
-
-      <div>
-        <label class="text-sm font-semibold">Costo unitario</label>
-        <input type="number" id="configCostoUnitario" class="w-full border rounded px-2 py-1">
-      </div>
-
-      <div>
-        <label class="text-sm font-semibold">Pack</label>
-        <select id="configPack" class="w-full border rounded px-2 py-1"></select>
-      </div>
-
-      <div>
-        <label class="text-sm font-semibold">Precio final pack</label>
-        <input type="number" id="configPrecioPack" class="w-full border rounded px-2 py-1">
-      </div>
-
-    </div>
-
-    <div class="mt-6 text-right">
-      <button onclick="guardarConfig()" 
-        class="bg-indigo-600 text-white px-4 py-2 rounded">
-        Guardar Cambios
-      </button>
-    </div>
-
-  </div>
-</div>
 
 <!-- MODAL COPYS -->
 <div id="modalCopys" class="fixed inset-0 bg-black bg-opacity-40 hidden items-center justify-center z-50">
