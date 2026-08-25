@@ -1834,20 +1834,57 @@ const nombreMes =
 // EGRESOS POR CATEGORÍA
 // ======================================================
 
+// ======================================================
+// EGRESOS POR CATEGORÍA - AGRUPADOS POR MES
+// ======================================================
+
 function actualizarEgresosPorCategoria() {
 
-  const categoriasEgresos = {};
+  const meses = {};
 
+
+  // ====================================================
+  // AGRUPAR EGRESOS POR MES
+  // ====================================================
 
   movimientosFiltrados.forEach(movimiento => {
 
     // Solamente egresos
-
-    if (
-      movimiento.tipo !== "egreso"
-    ) {
-
+    if (movimiento.tipo !== "egreso") {
       return;
+    }
+
+
+    if (!movimiento.fecha) {
+      return;
+    }
+
+
+    // Tomamos directamente YYYY-MM-DD
+    const fechaTexto =
+      String(movimiento.fecha).substring(0, 10);
+
+
+    const partes =
+      fechaTexto.split("-");
+
+
+    if (partes.length !== 3) {
+      return;
+    }
+
+
+    const anio = partes[0];
+    const numeroMes = partes[1];
+
+
+    const clave =
+      `${anio}-${numeroMes}`;
+
+
+    if (!meses[clave]) {
+
+      meses[clave] = {};
 
     }
 
@@ -1861,21 +1898,26 @@ function actualizarEgresosPorCategoria() {
       Number(movimiento.monto) || 0;
 
 
-    if (!categoriasEgresos[categoria]) {
+    if (!meses[clave][categoria]) {
 
-      categoriasEgresos[categoria] = 0;
+      meses[clave][categoria] = 0;
 
     }
 
 
-    categoriasEgresos[categoria] += monto;
+    meses[clave][categoria] += monto;
 
   });
 
 
-  const lista =
-    Object.entries(categoriasEgresos)
-      .sort((a, b) => b[1] - a[1]);
+  // ====================================================
+  // ORDENAR MESES - MÁS RECIENTE PRIMERO
+  // ====================================================
+
+  const claves =
+    Object.keys(meses)
+      .sort()
+      .reverse();
 
 
   const contenedor =
@@ -1889,7 +1931,11 @@ function actualizarEgresosPorCategoria() {
   }
 
 
-  if (lista.length === 0) {
+  // ====================================================
+  // SIN EGRESOS
+  // ====================================================
+
+  if (claves.length === 0) {
 
     contenedor.innerHTML = `
       <div class="text-center text-gray-500 py-5">
@@ -1898,67 +1944,237 @@ function actualizarEgresosPorCategoria() {
     `;
 
     return;
-
   }
 
 
-  const totalEgresos =
-    lista.reduce(
-      (total, item) => total + item[1],
-      0
-    );
+  // ====================================================
+  // NOMBRES DE LOS MESES
+  // ====================================================
 
+  const mesesNombres = [
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre"
+  ];
+
+
+  // ====================================================
+  // GENERAR CADA MES
+  // ====================================================
 
   contenedor.innerHTML =
-    lista.map(([categoria, monto]) => {
+    claves.map((clave, indice) => {
 
-      const porcentaje =
-        totalEgresos > 0
-          ? (monto / totalEgresos) * 100
-          : 0;
+      const categorias =
+        meses[clave];
 
+
+      const [anio, numeroMes] =
+        clave.split("-");
+
+
+      const nombreMes =
+        `${mesesNombres[Number(numeroMes) - 1]} ${anio}`;
+
+
+      // ==================================================
+      // ORDENAR CATEGORÍAS POR MONTO
+      // ==================================================
+
+      const lista =
+        Object.entries(categorias)
+          .sort((a, b) => b[1] - a[1]);
+
+
+      // ==================================================
+      // TOTAL DEL MES
+      // ==================================================
+
+      const totalMes =
+        lista.reduce(
+          (total, item) =>
+            total + item[1],
+          0
+        );
+
+
+      // ID único para este mes
+
+      const idContenido =
+        `egresosMes_${clave.replace("-", "_")}`;
+
+
+      const idFlecha =
+        `flechaEgresosMes_${clave.replace("-", "_")}`;
+
+
+      // ==================================================
+      // CATEGORÍAS DEL MES
+      // ==================================================
+
+      const contenidoCategorias =
+        lista.map(([categoria, monto]) => {
+
+          const porcentaje =
+            totalMes > 0
+              ? (monto / totalMes) * 100
+              : 0;
+
+
+          return `
+
+            <div class="mb-4">
+
+              <div class="flex justify-between items-center mb-1">
+
+                <span class="font-semibold">
+                  ${categoria}
+                </span>
+
+
+                <div class="text-right">
+
+                  <span class="font-bold">
+                    ${formatoMoneda(monto)}
+                  </span>
+
+                  <span class="text-gray-500 text-sm ml-2">
+                    ${porcentaje.toFixed(1)}%
+                  </span>
+
+                </div>
+
+              </div>
+
+
+              <div class="w-full bg-gray-200 rounded-full h-2">
+
+                <div
+                  class="bg-red-500 h-2 rounded-full"
+                  style="width: ${porcentaje}%">
+                </div>
+
+              </div>
+
+            </div>
+
+          `;
+
+        }).join("");
+
+
+      // ==================================================
+      // MES
+      // ==================================================
 
       return `
 
-        <div>
+        <div class="border rounded-xl overflow-hidden mb-3">
 
-          <div class="flex justify-between items-center mb-1">
 
-            <span class="font-semibold">
-              ${categoria}
+          <!-- CABECERA DEL MES -->
+
+          <button
+            type="button"
+            onclick="toggleEgresosMes('${idContenido}', '${idFlecha}')"
+            class="w-full p-4 flex items-center justify-between text-left hover:bg-gray-50 transition">
+
+            <div>
+
+              <div class="font-bold text-lg">
+                ${nombreMes}
+              </div>
+
+              <div class="text-sm text-gray-500 mt-1">
+                Total egresos:
+                <span class="font-semibold">
+                  ${formatoMoneda(totalMes)}
+                </span>
+              </div>
+
+            </div>
+
+
+            <span
+              id="${idFlecha}"
+              class="text-xl font-bold text-gray-500">
+
+              ▶
+
             </span>
 
+          </button>
 
-            <div class="text-right">
 
-              <span class="font-bold">
-                ${formatoMoneda(monto)}
-              </span>
+          <!-- CONTENIDO DEL MES -->
 
-              <span class="text-gray-500 text-sm ml-2">
-                ${porcentaje.toFixed(1)}%
-              </span>
+          <div
+            id="${idContenido}"
+            class="hidden px-5 pb-5 pt-2">
 
-            </div>
+            ${contenidoCategorias}
 
           </div>
 
-
-          <div class="w-full bg-gray-200 rounded-full h-2">
-
-            <div
-              class="bg-red-500 h-2 rounded-full"
-              style="width: ${porcentaje}%">
-
-            </div>
-
-          </div>
 
         </div>
 
       `;
 
     }).join("");
+
+}
+
+
+
+// ======================================================
+// ABRIR / CERRAR MES DE EGRESOS
+// ======================================================
+
+function toggleEgresosMes(
+  contenidoId,
+  flechaId
+) {
+
+  const contenido =
+    document.getElementById(contenidoId);
+
+
+  const flecha =
+    document.getElementById(flechaId);
+
+
+  if (!contenido || !flecha) {
+    return;
+  }
+
+
+  const estaOculto =
+    contenido.classList.contains("hidden");
+
+
+  if (estaOculto) {
+
+    contenido.classList.remove("hidden");
+
+    flecha.textContent = "▼";
+
+  } else {
+
+    contenido.classList.add("hidden");
+
+    flecha.textContent = "▶";
+
+  }
 
 }
 
