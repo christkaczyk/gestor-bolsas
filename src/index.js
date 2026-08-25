@@ -851,6 +851,57 @@ app.get("/clientes-ranking", async (req, res) => {
   }
 });
 
+// ======================================================
+// RANKING DE CLIENTES POR GANANCIA
+// ======================================================
+
+app.get("/clientes-ranking-ganancia", async (req, res) => {
+  try {
+
+    const result = await pool.query(`
+      SELECT
+        clientes.id,
+        clientes.nombre,
+        clientes.whatsapp,
+        clientes.archivo_codigo,
+
+        COUNT(ventas.id) AS cantidad_compras,
+
+        COALESCE(SUM(ventas.cantidad), 0) AS bolsas_vendidas,
+
+        COALESCE(SUM(ventas.precio_final), 0) AS facturacion,
+
+        COALESCE(SUM(ventas.ganancia_personal), 0) AS ganancia
+
+      FROM clientes
+
+      INNER JOIN ventas
+        ON clientes.id = ventas.cliente_id
+
+      GROUP BY
+        clientes.id,
+        clientes.nombre,
+        clientes.whatsapp,
+        clientes.archivo_codigo
+
+      ORDER BY ganancia DESC
+
+      LIMIT 20
+    `);
+
+    res.json(result.rows);
+
+  } catch (error) {
+
+    console.error("Error obteniendo ranking de clientes:", error);
+
+    res.status(500).json({
+      error: "Error al obtener ranking de clientes"
+    });
+
+  }
+});
+
 app.get("/productos", async (req, res) => {
   const result = await pool.query(`
     SELECT id, tamano, tipo_asa, costo_unitario

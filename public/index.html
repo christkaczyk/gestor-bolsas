@@ -81,6 +81,14 @@
 
 <div class="mt-2">
   
+<div class="mt-2">
+  <button
+    onclick="abrirModalRankingClientes()"
+    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg shadow transition">
+    Ranking Clientes
+  </button>
+</div>
+
   <div class="mt-2">
 <button 
   onclick="abrirModalEstadisticas()"
@@ -2861,6 +2869,168 @@ function cargarPedidoDesdeVentas() {
 
 }
 
+// ======================================================
+// RANKING DE CLIENTES
+// ======================================================
+
+window.abrirModalRankingClientes = async function() {
+
+  const modal = document.getElementById("modalRankingClientes");
+
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+
+  await cargarRankingClientes();
+
+};
+
+
+window.cerrarModalRankingClientes = function() {
+
+  const modal = document.getElementById("modalRankingClientes");
+
+  modal.classList.add("hidden");
+  modal.classList.remove("flex");
+
+};
+
+
+async function cargarRankingClientes() {
+
+  const tabla = document.getElementById("tablaRankingClientes");
+
+  tabla.innerHTML = `
+    <tr>
+      <td colspan="6" class="text-center py-8 text-slate-500">
+        Cargando ranking...
+      </td>
+    </tr>
+  `;
+
+  try {
+
+    const res = await fetch("/clientes-ranking-ganancia");
+
+    if (!res.ok) {
+      throw new Error("Error al obtener ranking");
+    }
+
+    const clientes = await res.json();
+
+    tabla.innerHTML = "";
+
+    if (clientes.length === 0) {
+
+      tabla.innerHTML = `
+        <tr>
+          <td colspan="6" class="text-center py-8 text-slate-500">
+            Todavía no hay ventas registradas.
+          </td>
+        </tr>
+      `;
+
+      return;
+    }
+
+
+    clientes.forEach((cliente, index) => {
+
+      const fila = document.createElement("tr");
+
+      fila.className =
+        "border-b hover:bg-slate-50 transition";
+
+
+      let posicion = index + 1;
+
+      let medalla = "";
+
+      if (posicion === 1) {
+        medalla = "🥇";
+      } else if (posicion === 2) {
+        medalla = "🥈";
+      } else if (posicion === 3) {
+        medalla = "🥉";
+      }
+
+
+      fila.innerHTML = `
+
+        <td class="px-4 py-3 text-center font-bold">
+
+          ${medalla || posicion}
+
+        </td>
+
+
+        <td class="px-4 py-3">
+
+          <div class="font-semibold text-slate-800">
+            ${cliente.nombre}
+          </div>
+
+          <div class="text-xs text-slate-500">
+            ${cliente.archivo_codigo}
+          </div>
+
+        </td>
+
+
+        <td class="px-4 py-3 text-center">
+
+          ${cliente.cantidad_compras}
+
+        </td>
+
+
+        <td class="px-4 py-3 text-center">
+
+          ${formatearPesos(cliente.bolsas_vendidas)}
+
+        </td>
+
+
+        <td class="px-4 py-3 text-right">
+
+          $${formatearPesos(cliente.facturacion)}
+
+        </td>
+
+
+        <td class="px-4 py-3 text-right font-bold text-green-600">
+
+          $${formatearPesos(cliente.ganancia)}
+
+        </td>
+
+      `;
+
+
+      tabla.appendChild(fila);
+
+    });
+
+
+    document.getElementById("totalRankingClientes").innerText =
+      `Mostrando los ${clientes.length} mejores clientes`;
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    tabla.innerHTML = `
+      <tr>
+        <td colspan="6"
+            class="text-center py-8 text-red-500">
+          Error al cargar el ranking.
+        </td>
+      </tr>
+    `;
+
+  }
+
+}
 
 function abrirModalEstadisticas(){
 
@@ -3283,6 +3453,105 @@ window.editarPrecio = function(td, id, precioActual) {
     </button>
 
   </div>
+</div>
+
+<!-- ====================================================== -->
+<!-- MODAL RANKING DE CLIENTES -->
+<!-- ====================================================== -->
+
+<div id="modalRankingClientes"
+     class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
+
+  <div class="bg-white w-[95vw] max-w-[1100px] max-h-[90vh] rounded-2xl shadow-xl p-6 flex flex-col">
+
+    <!-- HEADER -->
+
+    <div class="flex justify-between items-center mb-5">
+
+      <div>
+        <h2 class="text-xl font-bold text-slate-800">
+          🏆 Ranking de Clientes
+        </h2>
+
+        <p class="text-sm text-slate-500 mt-1">
+          Top 20 clientes que más ganancia generaron
+        </p>
+      </div>
+
+      <button
+        onclick="cerrarModalRankingClientes()"
+        class="text-slate-500 hover:text-black text-xl">
+        ✕
+      </button>
+
+    </div>
+
+
+    <!-- TABLA -->
+
+    <div class="overflow-auto border rounded-xl">
+
+      <table class="w-full border-collapse text-sm">
+
+        <thead class="bg-slate-800 text-white sticky top-0">
+
+          <tr>
+
+            <th class="px-4 py-3 text-center">
+              #
+            </th>
+
+            <th class="px-4 py-3 text-left">
+              Cliente
+            </th>
+
+            <th class="px-4 py-3 text-center">
+              Compras
+            </th>
+
+            <th class="px-4 py-3 text-center">
+              Bolsas
+            </th>
+
+            <th class="px-4 py-3 text-right">
+              Facturación
+            </th>
+
+            <th class="px-4 py-3 text-right">
+              Ganancia
+            </th>
+
+          </tr>
+
+        </thead>
+
+        <tbody id="tablaRankingClientes">
+        </tbody>
+
+      </table>
+
+    </div>
+
+
+    <!-- FOOTER -->
+
+    <div class="flex justify-between items-center mt-4">
+
+      <span
+        id="totalRankingClientes"
+        class="text-sm text-slate-500">
+      </span>
+
+      <button
+        onclick="cerrarModalRankingClientes()"
+        class="bg-gray-200 hover:bg-gray-300 px-5 py-2 rounded-lg">
+        Cerrar
+      </button>
+
+    </div>
+
+  </div>
+
 </div>
 
 <!-- MODAL CONFIGURACIÓN DE PRECIOS -->
