@@ -69,15 +69,26 @@
     </div>
 
 
-    <button
-      onclick="window.location.href='/'"
-      class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl font-semibold shadow">
+    <div class="flex items-center gap-3">
 
-      ← Volver a Ventas
+  <button
+    id="btnOcultarDinero"
+    onclick="toggleOcultarDinero()"
+    class="bg-slate-700 hover:bg-slate-800 text-white px-5 py-3 rounded-xl font-semibold shadow">
 
-    </button>
+    👁️ Ocultar dinero
 
-  </div>
+  </button>
+
+  <button
+    onclick="window.location.href='/'"
+    class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-xl font-semibold shadow">
+
+    ← Volver a Ventas
+
+  </button>
+
+</div>
 
 </header>
 
@@ -1091,22 +1102,26 @@ let movimientosFiltrados = [];
 
 let graficoFinanzas = null;
 
+let dineroOculto = false;
+
 let categorias = [
 
-  "Ventas",
-  "Señas",
-  "Cobro restante",
-  "Compra de bolsas",
-  "Tinta",
-  "Taller",
-  "Envíos",
-  "Publicidad",
-  "Meta Ads",
+  // PERSONALES
+  "Salud / Bienestar",
+  "Alimentación",
+  "Transporte",
+  "Suscripciones",
+  "Entretenimiento",
+  "Salud",
+  "Deudas / Préstamos",
+  "Compras / Cuotas",
   "Servicios",
-  "Impuestos",
-  "Monotributo",
-  "Equipamiento",
-  "Otros"
+
+  // NEGOCIO
+  "Insumos / Producción",
+  "Envíos / Logística",
+  "Negocio / Publicidad",
+  "Impuestos"
 
 ];
 
@@ -1118,12 +1133,36 @@ let categorias = [
 
 function formatoMoneda(valor) {
 
+  if (dineroOculto) {
+    return "****";
+  }
+
   return "$" + new Intl.NumberFormat("es-AR", {
 
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
 
   }).format(Number(valor) || 0);
+
+}
+
+function toggleOcultarDinero() {
+
+  dineroOculto = !dineroOculto;
+
+  const boton = document.getElementById("btnOcultarDinero");
+
+  if (dineroOculto) {
+
+    boton.textContent = "👁️ Mostrar dinero";
+
+  } else {
+
+    boton.textContent = "🙈 Ocultar dinero";
+
+  }
+
+  renderizarTodo();
 
 }
 
