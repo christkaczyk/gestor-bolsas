@@ -405,7 +405,7 @@
 
   font-weight: 800;
 
-  color: #0f172a;
+  color: #ffffff;
 
 }
 
@@ -416,7 +416,7 @@
 
   font-size: 14px;
 
-  color: #64748b;
+  color: #fcfcfc;
 
 }
 
@@ -607,48 +607,6 @@
   margin-top: 3px;
 }
 
-/* ==========================================================
-   DROPDOWN - GRÁFICO FACTURACIÓN VS GANANCIA
-   ========================================================== */
-
-.dashboard-chart {
-  overflow: hidden;
-}
-
-.dashboard-chart-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
-  user-select: none;
-}
-
-.dashboard-chart-arrow {
-  font-size: 20px;
-  color: #64748b;
-  transition: transform 0.2s ease;
-}
-
-.dashboard-chart.open .dashboard-chart-arrow {
-  transform: rotate(90deg);
-}
-
-.dashboard-chart-content {
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transition:
-    max-height 0.3s ease,
-    opacity 0.2s ease,
-    margin-top 0.3s ease;
-}
-
-.dashboard-chart.open .dashboard-chart-content {
-  max-height: 400px;
-  opacity: 1;
-  margin-top: 18px;
-}
-
 
 /* ==========================================================
    INFORMACIÓN INFERIOR
@@ -802,11 +760,105 @@
 
 }
 
+/* ==========================================
+   GRÁFICO + TOP 10 CLIENTES
+   ========================================== */
+
+.dashboard-chart-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
+  gap: 20px;
+  margin-bottom: 24px;
+}
+
+.dashboard-top-clientes {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+}
+
+.dashboard-top-clientes-header {
+  margin-bottom: 16px;
+}
+
+.dashboard-top-clientes-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.dashboard-top-clientes-subtitle {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.top-cliente-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.top-cliente-item:last-child {
+  border-bottom: none;
+}
+
+.top-cliente-posicion {
+  width: 28px;
+  min-width: 28px;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.top-cliente-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.top-cliente-nombre {
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.top-cliente-detalle {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.top-cliente-facturacion {
+  text-align: right;
+  font-size: 13px;
+  font-weight: 700;
+  color: #16a34a;
+  white-space: nowrap;
+}
+
+
+/* RESPONSIVE */
+
+@media (max-width: 900px) {
+
+  .dashboard-chart-row {
+    grid-template-columns: 1fr;
+  }
+
+}
+
 </style>
 </head>
 <body class="bg-slate-100 p-6">
   
-<div class="header-top bg-gradient-to-r from-pink-200 via-purple-200 to-blue-300 mb-6">
+<div class="header-top mb-6" style="background: #897ff7 !important;">
 
 
 
@@ -933,7 +985,7 @@
     <div class="dashboard-heading-left">
 
       <h1>
-        Dashboard
+        Dashboard ZETTAPRINT.
       </h1>
 
       <p>
@@ -943,10 +995,27 @@
     </div>
 
 
-    <select
-      id="filtro-mes"
-      class="dashboard-month">
-    </select>
+    <div class="dashboard-filtros">
+
+  <select
+    id="filtro-mes"
+    class="dashboard-month">
+  </select>
+
+  <select
+    id="filtro-periodo"
+    class="dashboard-month">
+
+    <option value="1">Este mes</option>
+    <option value="3">Últimos 3 meses</option>
+    <option value="6">Últimos 6 meses</option>
+    <option value="12">Últimos 12 meses</option>
+
+  </select>
+
+</div>
+
+
 
   </div>
 
@@ -1057,47 +1126,80 @@
        GRÁFICO
        ======================================================== -->
 
+  <!-- ==========================================================
+     GRÁFICO + TOP 10 CLIENTES
+     ========================================================== -->
+
+<div class="dashboard-chart-row">
+
+  <!-- =========================
+       GRÁFICO FACTURACIÓN
+       ========================= -->
+
   <div class="dashboard-chart" id="graficoFacturacionCard">
 
-  <!-- CABECERA DEL DROPDOWN -->
-  <div
-    class="dashboard-chart-header"
-    onclick="toggleGraficoFacturacion()"
-  >
+    <!-- CABECERA DEL DROPDOWN -->
 
-    <div>
+    <div class="dashboard-chart-header">
 
-      <div class="dashboard-section-title">
-        Facturación vs Ganancia
+      <div>
+
+        <div class="dashboard-section-title">
+          Facturación vs Ganancia
+        </div>
+
+        <div class="dashboard-section-subtitle">
+          Evolución mensual
+        </div>
+
       </div>
 
-      <div class="dashboard-section-subtitle">
-        Evolución mensual
+      
+
+    </div>
+
+
+    <!-- CONTENIDO DEL GRÁFICO -->
+
+    <div
+  id="graficoFacturacionContent"
+>
+
+      <div style="height: 300px;">
+
+        <canvas id="graficoFacturacion"></canvas>
+
       </div>
 
     </div>
 
-    <span
-      id="graficoFacturacionArrow"
-      class="dashboard-chart-arrow"
-    >
-      ▶
-    </span>
-
   </div>
 
 
-  <!-- CONTENIDO DEL GRÁFICO -->
-  <div
-    id="graficoFacturacionContent"
-    class="dashboard-chart-content"
-  >
+  <!-- =========================
+       TOP 10 CLIENTES
+       ========================= -->
 
-    <div style="height: 300px;">
+  <div class="dashboard-top-clientes">
 
-      <canvas
-        id="graficoFacturacion">
-      </canvas>
+    <div class="dashboard-top-clientes-header">
+
+      <div class="dashboard-top-clientes-title">
+        🏆 Top 10 clientes
+      </div>
+
+      <div class="dashboard-top-clientes-subtitle">
+        Clientes que más compraron
+      </div>
+
+    </div>
+
+
+    <div id="top10Clientes">
+
+      <div class="text-center py-8 text-slate-400">
+        Cargando...
+      </div>
 
     </div>
 
@@ -1791,15 +1893,7 @@ window.filtrarClientes = function() {
 cargarFiltroMeses();
 calcularTotales();
 
-window.toggleGraficoFacturacion = function() {
 
-  const card = document.getElementById("graficoFacturacionCard");
-
-  if (!card) return;
-
-  card.classList.toggle("open");
-
-};
 
 function crearGraficoFacturacion() {
 
@@ -2223,16 +2317,188 @@ function mostrarComparacion(elementId, actual, anterior) {
 function calcularTotales() {
 
   const filtro = document.getElementById("filtro-mes").value;
+  const periodo = Number(
+    document.getElementById("filtro-periodo")?.value || 1
+  );
 
   let filtradas = ventasGlobal;
+  actualizarContadores(filtradas);
+
+  // ========================================
+  // FILTRO GLOBAL DEL DASHBOARD
+  // ========================================
 
   if (filtro !== "todos") {
+
+    const [anio, mes] = filtro.split("-").map(Number);
+
+    // Mes seleccionado = mes final
+    const fechaFin = new Date(
+      anio,
+      mes + 1,
+      1
+    );
+
+    // Cantidad de meses hacia atrás
+    const fechaInicio = new Date(
+      anio,
+      mes - periodo + 1,
+      1
+    );
+
     filtradas = ventasGlobal.filter(v => {
+
       const fecha = new Date(v.fecha);
-      const clave = `${fecha.getFullYear()}-${fecha.getMonth()}`;
-      return clave === filtro;
+
+      return (
+        fecha >= fechaInicio &&
+        fecha < fechaFin
+      );
+
     });
+
   }
+
+  // ========================================
+  // RESTO DEL DASHBOARD
+  // ========================================
+
+  // ========================================
+  // TOP 10 CLIENTES
+  // ========================================
+
+  cargarTop10Clientes(filtradas);
+
+// ======================================================
+// TOP 10 CLIENTES
+// ======================================================
+
+function cargarTop10Clientes(ventas) {
+
+  const container = document.getElementById("top10Clientes");
+
+  if (!container) return;
+
+  // Agrupar clientes
+  const clientes = {};
+
+  ventas.forEach(v => {
+
+    const nombre =
+      v.nombre_cliente ||
+      v.cliente ||
+      v.nombre ||
+      "Cliente sin nombre";
+
+    if (!clientes[nombre]) {
+
+      clientes[nombre] = {
+        nombre: nombre,
+        bolsas: 0,
+        facturacion: 0
+      };
+
+    }
+
+    clientes[nombre].bolsas += Number(v.cantidad || 0);
+
+    clientes[nombre].facturacion +=
+      Number(v.precio_final || 0);
+
+  });
+
+
+  // Convertir a array
+  const ranking = Object.values(clientes);
+
+
+  // Ordenar por cantidad de bolsas
+  ranking.sort((a, b) => {
+
+    if (b.bolsas !== a.bolsas) {
+      return b.bolsas - a.bolsas;
+    }
+
+    return b.facturacion - a.facturacion;
+
+  });
+
+
+  // Solo Top 10
+  const top10 = ranking.slice(0, 5);
+
+
+  // Sin clientes
+  if (top10.length === 0) {
+
+    container.innerHTML = `
+      <div class="text-center py-8 text-slate-400">
+        No hay ventas registradas.
+      </div>
+    `;
+
+    return;
+
+  }
+
+
+  // Generar HTML
+  container.innerHTML = top10.map((cliente, index) => {
+
+    let posicion = index + 1;
+
+    let medalla = posicion;
+
+    if (posicion === 1) {
+      medalla = "🥇";
+    }
+
+    if (posicion === 2) {
+      medalla = "🥈";
+    }
+
+    if (posicion === 3) {
+      medalla = "🥉";
+    }
+
+
+    return `
+
+      <div class="top-cliente-item">
+
+        <div class="top-cliente-posicion">
+          ${medalla}
+        </div>
+
+
+        <div class="top-cliente-info">
+
+          <div class="top-cliente-nombre">
+            ${cliente.nombre}
+          </div>
+
+          <div class="top-cliente-detalle">
+            ${new Intl.NumberFormat("es-AR").format(cliente.bolsas)}
+            bolsas
+          </div>
+
+        </div>
+
+
+        <div class="top-cliente-facturacion">
+
+          $${formatearPesos(cliente.facturacion)}
+
+        </div>
+
+      </div>
+
+    `;
+
+  }).join("");
+
+}
+
 
   // ========================================
 // MES ANTERIOR
@@ -2426,20 +2692,37 @@ filtradas.forEach(v => {
   document.getElementById("tamano-top").innerText = tamanoTop;
 }
 
-function actualizarContadores() {
+function actualizarContadores(ventas = ventasGlobal) {
 
-  const comprar = ventasGlobal.filter(v => v.etapa === "comprar").length;
+  const comprar =
+    ventas.filter(v => v.etapa === "comprar").length;
 
-  const sena = ventasGlobal.filter(v => v.etapa === "sena").length;
+  const sena =
+    ventas.filter(v => v.etapa === "sena").length;
 
-  const entregados = ventasGlobal.filter(v => v.etapa === "entregado").length;
+  const entregados =
+    ventas.filter(v => v.etapa === "entregado").length;
 
   document.getElementById("count-comprar").innerText = comprar;
+
   document.getElementById("count-sena").innerText = sena;
+
   document.getElementById("count-entregado").innerText = entregados;
 }
 
-document.getElementById("filtro-mes").addEventListener("change", calcularTotales);
+document.getElementById("filtro-mes").addEventListener("change", () => {
+
+  calcularTotales();
+  crearGraficoFacturacion();
+
+});
+
+document.getElementById("filtro-periodo").addEventListener("change", () => {
+
+  calcularTotales();
+  crearGraficoFacturacion();
+
+});
 
   document.getElementById("producto").addEventListener("change", (e) => {
     cargarPacks(e.target.value);
