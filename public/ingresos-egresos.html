@@ -42,6 +42,173 @@
       box-shadow: 0 0 0 2px rgba(99,102,241,0.15);
     }
 
+/* ======================================================
+   SECCIONES FINANCIERAS
+   ====================================================== */
+
+.seccion-grafico {
+  background: #f7f5ff;
+}
+
+.seccion-grafico:hover {
+  background: #f1efff;
+}
+
+
+.seccion-resumen {
+  background: #f4f8ff;
+}
+
+.seccion-resumen:hover {
+  background: #edf4ff;
+}
+
+
+.seccion-categorias {
+  background: #fff6f7;
+}
+
+.seccion-categorias:hover {
+  background: #fff0f2;
+}
+
+
+/* ======================================================
+   ENCABEZADOS DE MES
+   ====================================================== */
+
+.encabezado-mes {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.encabezado-mes:hover {
+  background: #f1f5f9;
+}
+
+
+.resumen-mes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+
+.badge-finanzas {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+.badge-ingresos {
+  background: #ecfdf5;
+  color: #15803d;
+}
+
+
+.badge-egresos {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+
+.badge-resultado {
+  background: #eef2ff;
+  color: #4f46e5;
+}
+
+
+.badge-resultado-negativo {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+/* ======================================================
+   FILAS DE MOVIMIENTOS
+   ====================================================== */
+
+.movimiento-fila {
+  border-bottom: 1px solid #e5e7eb;
+  transition: background 0.15s ease;
+}
+
+.movimiento-fila td:first-child {
+  padding-left: 18px;
+}
+
+.movimiento-fila:hover {
+  background: #f8fafc;
+}
+
+.movimiento-fecha {
+  font-weight: 500;
+  color: #475569;
+}
+
+.movimiento-tipo {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.movimiento-categoria {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.movimiento-descripcion {
+  color: #64748b;
+}
+
+.movimiento-medio {
+  color: #64748b;
+}
+
+.movimiento-monto {
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.movimiento-ingreso {
+  color: #16a34a;
+}
+
+.movimiento-egreso {
+  color: #dc2626;
+}
+
+.movimiento-acciones {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+}
+
+.movimiento-acciones button {
+  transition: transform 0.15s ease;
+}
+
+.movimiento-acciones button:hover {
+  transform: translateY(-1px);
+}
+
+/* ======================================================
+   INDICADOR LATERAL DE INGRESO / EGRESO
+   ====================================================== */
+
+.movimiento-ingreso-fila {
+  border-left: 4px solid #22c55e;
+}
+
+.movimiento-egreso-fila {
+  border-left: 4px solid #ef4444;
+}
+
   </style>
 </head>
 
@@ -402,7 +569,7 @@
   <button
     type="button"
     onclick="toggleSeccion('contenidoGrafico', 'flechaGrafico')"
-    class="w-full p-5 flex items-center justify-between text-left hover:bg-gray-50 transition"
+    class="w-full p-5 flex items-center justify-between text-left seccion-grafico transition"
   >
 
     <div>
@@ -452,7 +619,7 @@
   <button
     type="button"
     onclick="toggleSeccion('contenidoResumenMensual', 'flechaResumenMensual')"
-    class="w-full p-5 flex items-center justify-between text-left hover:bg-gray-50 transition"
+    class="w-full p-5 flex items-center justify-between text-left seccion-resumen transition"
   >
 
     <div>
@@ -535,7 +702,7 @@
   <button
     type="button"
     onclick="toggleSeccion('contenidoCategorias', 'flechaCategorias')"
-    class="w-full p-5 flex items-center justify-between text-left hover:bg-gray-50 transition"
+    class="w-full p-5 flex items-center justify-between text-left seccion-categorias transition"
   >
 
     <div>
@@ -1519,18 +1686,17 @@ function actualizarResumen() {
 function renderizarTabla() {
 
   const tbody =
-    document.getElementById(
-      "tablaMovimientos"
-    );
-
+    document.getElementById("tablaMovimientos");
 
   const busqueda =
-    document.getElementById(
-      "buscador"
-    ).value
+    document.getElementById("buscador").value
       .toLowerCase()
       .trim();
 
+
+  // ======================================================
+  // FILTRAR POR BUSCADOR
+  // ======================================================
 
   const lista =
     movimientosFiltrados.filter(movimiento => {
@@ -1539,15 +1705,12 @@ function renderizarTabla() {
         return true;
       }
 
-
       return [
-
         movimiento.categoria,
         movimiento.descripcion,
         movimiento.medio_pago,
         movimiento.cuenta,
         movimiento.notas
-
       ]
         .filter(Boolean)
         .join(" ")
@@ -1557,11 +1720,14 @@ function renderizarTabla() {
     });
 
 
+  // ======================================================
+  // SIN MOVIMIENTOS
+  // ======================================================
+
   if (lista.length === 0) {
 
     tbody.innerHTML = `
       <tr>
-
         <td
           colspan="7"
           class="p-8 text-center text-gray-500">
@@ -1569,116 +1735,509 @@ function renderizarTabla() {
           No hay movimientos para mostrar.
 
         </td>
-
       </tr>
     `;
 
     return;
-
   }
 
 
+  // ======================================================
+  // AGRUPAR POR MES
+  // ======================================================
+
+  const meses = {};
+
+
+  lista.forEach(movimiento => {
+
+    if (!movimiento.fecha) {
+      return;
+    }
+
+
+    // Tomamos directamente YYYY-MM-DD
+    const fechaTexto =
+      String(movimiento.fecha).substring(0, 10);
+
+
+    const partes =
+      fechaTexto.split("-");
+
+
+    if (partes.length !== 3) {
+      return;
+    }
+
+
+    const anio = partes[0];
+    const numeroMes = partes[1];
+
+
+    const clave =
+      `${anio}-${numeroMes}`;
+
+
+    if (!meses[clave]) {
+
+      meses[clave] = [];
+
+    }
+
+
+    meses[clave].push(movimiento);
+
+  });
+
+
+  // ======================================================
+  // ORDENAR MESES
+  // MÁS RECIENTE PRIMERO
+  // ======================================================
+
+  const claves =
+    Object.keys(meses)
+      .sort()
+      .reverse();
+
+
+  // ======================================================
+  // NOMBRES DE MESES
+  // ======================================================
+
+  const mesesNombres = [
+
+    "Enero",
+    "Febrero",
+    "Marzo",
+    "Abril",
+    "Mayo",
+    "Junio",
+    "Julio",
+    "Agosto",
+    "Septiembre",
+    "Octubre",
+    "Noviembre",
+    "Diciembre"
+
+  ];
+
+
+  // ======================================================
+  // GENERAR CADA MES
+  // ======================================================
+
   tbody.innerHTML =
-    lista.map(movimiento => {
 
-      const ingreso =
-        movimiento.tipo === "ingreso";
+    claves.map((clave, indice) => {
+
+      const movimientosMes =
+        meses[clave];
 
 
-      const colorTipo =
-        ingreso
+      const [anio, numeroMes] =
+        clave.split("-");
+
+
+      const nombreMes =
+        `${mesesNombres[Number(numeroMes) - 1]} ${anio}`;
+
+
+      // ==================================================
+      // CALCULAR TOTALES DEL MES
+      // ==================================================
+
+      let ingresos = 0;
+      let egresos = 0;
+
+
+      movimientosMes.forEach(movimiento => {
+
+        const monto =
+          Number(movimiento.monto) || 0;
+
+
+        if (movimiento.tipo === "ingreso") {
+
+          ingresos += monto;
+
+        } else {
+
+          egresos += monto;
+
+        }
+
+      });
+
+
+      const resultado =
+        ingresos - egresos;
+
+
+      const resultadoClase =
+        resultado >= 0
           ? "text-green-600"
           : "text-red-600";
 
 
-      const simbolo =
+      // ==================================================
+      // ID DEL DESPLEGABLE
+      // ==================================================
+
+      const idContenido =
+        `movimientosMes_${clave.replace("-", "_")}`;
+
+
+      const idFlecha =
+        `flechaMovimientosMes_${clave.replace("-", "_")}`;
+
+
+      // ==================================================
+      // ¿ESTE ES EL MES ACTUAL?
+      // ==================================================
+
+      const fechaActual =
+        new Date();
+
+
+      const mesActual =
+        `${fechaActual.getFullYear()}-${String(
+          fechaActual.getMonth() + 1
+        ).padStart(2, "0")}`;
+
+
+      const abierto =
+        clave === mesActual;
+
+
+      // ==================================================
+      // GENERAR MOVIMIENTOS
+      // ==================================================
+
+      const filas =
+        movimientosMes
+          .sort((a, b) => {
+
+            return String(b.fecha)
+              .localeCompare(String(a.fecha));
+
+          })
+          .map(movimiento => {
+
+            const ingreso =
+              movimiento.tipo === "ingreso";
+
+
+            const colorTipo =
+              ingreso
+                ? "text-green-600"
+                : "text-red-600";
+
+
+            const simbolo =
+              ingreso
+                ? "+"
+                : "-";
+
+
+            const fecha =
+              formatearFecha(movimiento.fecha);
+
+
+            return `
+
+  <tr class="movimiento-fila ${
+  ingreso
+    ? "movimiento-ingreso-fila"
+    : "movimiento-egreso-fila"
+}">
+
+    <!-- FECHA -->
+
+    <td class="p-4 movimiento-fecha">
+      ${fecha}
+    </td>
+
+
+    <!-- TIPO -->
+
+    <td class="p-4">
+
+      <span
+        class="movimiento-tipo ${
+          ingreso
+            ? "movimiento-ingreso"
+            : "movimiento-egreso"
+        }">
+
+        ${ingreso
+          ? "🟢 Ingreso"
+          : "🔴 Egreso"}
+
+      </span>
+
+    </td>
+
+
+    <!-- CATEGORÍA -->
+
+    <td class="p-4 movimiento-categoria">
+
+      ${movimiento.categoria || "-"}
+
+    </td>
+
+
+    <!-- DESCRIPCIÓN -->
+
+    <td class="p-4 movimiento-descripcion">
+
+      ${movimiento.descripcion || "-"}
+
+    </td>
+
+
+    <!-- MEDIO -->
+
+    <td class="p-4 movimiento-medio">
+
+      ${movimiento.medio_pago || "-"}
+
+    </td>
+
+
+    <!-- MONTO -->
+
+    <td
+      class="p-4 text-right movimiento-monto ${
         ingreso
-          ? "+"
-          : "-";
+          ? "movimiento-ingreso"
+          : "movimiento-egreso"
+      }">
+
+      ${simbolo}${formatoMoneda(
+        movimiento.monto
+      )}
+
+    </td>
 
 
-      const fecha = formatearFecha(movimiento.fecha);
+    <!-- ACCIONES -->
 
+    <td class="p-4">
+
+      <div class="movimiento-acciones">
+
+        <button
+          onclick="editarMovimiento(${movimiento.id})"
+          class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3 py-1.5 rounded-lg">
+
+          ✏️
+
+        </button>
+
+
+        <button
+          onclick="eliminarMovimiento(${movimiento.id})"
+          class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg">
+
+          🗑️
+
+        </button>
+
+      </div>
+
+    </td>
+
+  </tr>
+
+`;
+
+          }).join("");
+
+
+      // ==================================================
+      // CONTENIDO DEL MES
+      // ==================================================
+
+      const contenidoMes = `
+
+        <div
+          id="${idContenido}"
+          class="${abierto ? "" : "hidden"} mt-4">
+
+          <div class="overflow-x-auto">
+
+            <table class="w-full text-sm">
+
+              <tbody>
+
+                ${filas}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        </div>
+
+      `;
+
+
+      // ==================================================
+      // DEVOLVER EL BLOQUE DEL MES
+      // ==================================================
 
       return `
 
-        <tr class="border-b hover:bg-gray-50">
+  <tr>
 
-          <td class="p-3">
-            ${fecha}
-          </td>
+    <td colspan="7" class="p-0">
 
+      <div class="border-b">
 
-          <td class="p-3">
+        <!-- CABECERA DEL MES -->
 
-            <span class="${colorTipo} font-bold">
+        <button
+          type="button"
+          onclick="toggleMovimientosMes(
+            '${idContenido}',
+            '${idFlecha}'
+          )"
+          class="w-full p-5 flex items-center justify-between text-left encabezado-mes transition">
 
-              ${ingreso ? "🟢 Ingreso" : "🔴 Egreso"}
+          <div class="w-full">
 
-            </span>
+            <!-- NOMBRE DEL MES -->
 
-          </td>
+            <div class="flex items-center gap-3">
 
+              <div class="font-bold text-lg text-slate-800">
 
-          <td class="p-3 font-semibold">
-            ${movimiento.categoria || ""}
-          </td>
+                ${nombreMes}
 
+              </div>
 
-          <td class="p-3">
-            ${movimiento.descripcion || "-"}
-          </td>
+              <span class="text-xs text-gray-400">
 
+                ${movimientosMes.length}
+                movimiento${movimientosMes.length !== 1 ? "s" : ""}
 
-          <td class="p-3">
-
-            ${movimiento.medio_pago || "-"}
-
-          </td>
-
-
-          <td
-            class="p-3 text-right font-bold ${colorTipo}">
-
-            ${simbolo}${formatoMoneda(movimiento.monto)}
-
-          </td>
-
-
-          <td class="p-3">
-
-            <div class="flex justify-center gap-2">
-
-              <button
-                onclick="editarMovimiento(${movimiento.id})"
-                class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-3 py-1.5 rounded-lg">
-
-                ✏️
-
-              </button>
-
-
-              <button
-                onclick="eliminarMovimiento(${movimiento.id})"
-                class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded-lg">
-
-                🗑️
-
-              </button>
+              </span>
 
             </div>
 
-          </td>
 
-        </tr>
+            <!-- RESUMEN -->
 
-      `;
+            <div class="resumen-mes">
+
+              <span class="badge-finanzas badge-ingresos">
+
+                ↑ Ingresos
+                ${formatoMoneda(ingresos)}
+
+              </span>
+
+
+              <span class="badge-finanzas badge-egresos">
+
+                ↓ Egresos
+                ${formatoMoneda(egresos)}
+
+              </span>
+
+
+              <span
+                class="badge-finanzas ${
+                  resultado >= 0
+                    ? "badge-resultado"
+                    : "badge-resultado-negativo"
+                }">
+
+                ${resultado >= 0 ? "✓" : "!"}
+
+                Resultado
+                ${formatoMoneda(resultado)}
+
+              </span>
+
+            </div>
+
+          </div>
+
+
+          <!-- FLECHA -->
+
+          <span
+            id="${idFlecha}"
+            class="ml-4 text-xl font-bold text-gray-400">
+
+            ${abierto ? "▼" : "▶"}
+
+          </span>
+
+        </button>
+
+
+        <!-- MOVIMIENTOS DEL MES -->
+
+        ${contenidoMes}
+
+      </div>
+
+    </td>
+
+  </tr>
+
+`;
 
     }).join("");
 
 }
 
+// ======================================================
+// ABRIR / CERRAR MES DE MOVIMIENTOS
+// ======================================================
 
+function toggleMovimientosMes(
+  contenidoId,
+  flechaId
+) {
+
+  const contenido =
+    document.getElementById(contenidoId);
+
+
+  const flecha =
+    document.getElementById(flechaId);
+
+
+  if (!contenido || !flecha) {
+    return;
+  }
+
+
+  const estaOculto =
+    contenido.classList.contains("hidden");
+
+
+  if (estaOculto) {
+
+    contenido.classList.remove("hidden");
+
+    flecha.textContent = "▼";
+
+  } else {
+
+    contenido.classList.add("hidden");
+
+    flecha.textContent = "▶";
+
+  }
+
+}
 
 // ======================================================
 // GRÁFICO

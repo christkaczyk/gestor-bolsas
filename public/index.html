@@ -221,27 +221,29 @@
   width: 100%;
 
   border: none;
+  border-bottom: 2px solid #111827;
 
-  border-radius: 12px;
+  border-radius: 0;
 
-  padding: 11px 14px;
+  padding: 7px 4px 8px;
+
+  margin: 0;
 
   text-align: left;
 
-  font-size: 14px;
+  font-size: 19px;
 
-  font-weight: 600;
+  font-weight: 700;
 
-  color: #334155;
+  color: #111827;
 
-  background: #f1f5f9;
+  background: transparent;
 
   cursor: pointer;
 
   transition:
-    background 0.15s ease,
-    transform 0.15s ease,
-    color 0.15s ease;
+    color 0.15s ease,
+    padding-left 0.15s ease;
 }
 
 .header-menu-item:hover {
@@ -255,30 +257,28 @@
 /* BOTONES PRINCIPALES */
 
 .header-menu-item.primary {
-
-  background: #6366f1;
-
-  color: white;
+  background: transparent;
+  color: #111827;
 }
 
 .header-menu-item.primary:hover {
-
-  background: #4f46e5;
+  background: transparent;
+  color: #6366f1;
+  padding-left: 8px;
 }
 
 
 /* INGRESOS / EGRESOS */
 
 .header-menu-item.green {
-
-  background: #16a34a;
-
-  color: white;
+  background: transparent;
+  color: #111827;
 }
 
 .header-menu-item.green:hover {
-
-  background: #15803d;
+  background: transparent;
+  color: #16a34a;
+  padding-left: 8px;
 }
 
 
@@ -854,6 +854,35 @@
 
 }
 
+.dashboard-periodo-titulo {
+  position: absolute;
+  left: 50%;
+  top: 10px;
+  transform: translateX(-50%);
+  
+  text-align: center;
+  color: white;
+  
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  
+  pointer-events: none;
+}
+
+.dashboard-periodo-titulo span {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+.dashboard-periodo-titulo strong {
+  font-size: 22px;
+  font-weight: 800;
+  margin-top: 2px;
+  letter-spacing: 0.5px;
+}
+
 </style>
 </head>
 <body class="bg-slate-100 p-6">
@@ -984,13 +1013,27 @@
 
     <div class="dashboard-heading-left">
 
-      <h1>
-        Dashboard ZETTAPRINT.
-      </h1>
+      <div class="dashboard-heading-left">
 
-      <p>
-        Resumen general de tu negocio
-      </p>
+  <h1>
+    Dashboard ZETTAPRINT.
+  </h1>
+
+  <p>
+    Resumen general de tu negocio
+  </p>
+  <p>
+    Establecido el 24 de Febrero de 2025
+  </p>
+
+</div>
+
+<div class="dashboard-periodo-titulo">
+  <span>MOSTRANDO ESTADÍSTICAS DE</span>
+  <strong id="dashboard-periodo-titulo">
+    SEPTIEMBRE 2026
+  </strong>
+</div>
 
     </div>
 
@@ -1891,7 +1934,12 @@ window.filtrarClientes = function() {
     ventasGlobal = ventas;
     crearGraficoFacturacion();
 cargarFiltroMeses();
+actualizarTituloDashboard();
 calcularTotales();
+
+document.getElementById("filtro-mes").addEventListener("change", function() {
+  actualizarTituloDashboard();
+});
 
 
 
@@ -2275,6 +2323,8 @@ function cargarFiltroMeses() {
   select.appendChild(optionTodos);
 
 }
+
+
 
 function calcularVariacion(actual, anterior) {
 
@@ -5032,6 +5082,21 @@ window.editarPrecio = function(td, id, precioActual) {
     cargarVentas();
   });
 };
+
+function actualizarTituloDashboard() {
+
+  const filtroMes = document.getElementById("filtro-mes");
+  const titulo = document.getElementById("dashboard-periodo-titulo");
+
+  if (!filtroMes || !titulo) return;
+
+  const opcion = filtroMes.options[filtroMes.selectedIndex];
+
+  if (!opcion) return;
+
+  titulo.textContent = opcion.textContent.toUpperCase();
+}
+
 </script>
 
 
