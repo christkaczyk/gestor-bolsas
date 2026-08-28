@@ -3,7 +3,23 @@ const cors = require("cors");
 const pool = require("./db");
 require("dotenv").config();
 const path = require("path");
+const fs = require("fs");
+const { Arca } = require("@arcasdk/core");
 const app = express();
+
+const arca = new Arca({
+  cuit: Number(process.env.ARCA_CUIT),
+  cert: fs.readFileSync(
+    path.join(__dirname, "../certs/ZettaPrint.crt"),
+    "utf8"
+  ),
+  key: fs.readFileSync(
+    path.join(__dirname, "../certs/ZettaPrint.key"),
+    "utf8"
+  ),
+  production: true,
+  useHttpsAgent: true
+});
 
 app.use(cors());
 app.use(express.json());
@@ -473,7 +489,396 @@ app.put("/ventas/:id/etapa", async (req, res) => {
   }
 });
 
+// ======================================================
+// PREVISUALIZAR FACTURA DE UNA VENTA
+// NO ENVÍA NADA A ARCA
+// ======================================================
 
+app.get("/ventas/:id/factura-preview", async (req, res) => {
+
+  try {
+
+    const { id } = req.params;
+
+    const ventaResult = await pool.query(`
+      SELECT
+        ventas.*,
+        clientes.nombre AS cliente_nombre,
+        clientes.whatsapp AS cliente_whatsapp,
+        productos.tamano,
+        productos.tipo_asa
+      FROM ventas
+      JOIN clientes
+        ON ventas.cliente_id = clientes.id
+      JOIN productos
+        ON ventas.producto_id = productos.id
+      WHERE ventas.id = $1
+    `, [id]);
+
+    if (ventaResult.rows.length === 0) {
+      return res.status(404).json({
+        error: "Venta no encontrada"
+      });
+    }
+
+    const venta = ventaResult.rows[0];
+
+    // ==========================================
+    // COMPROBAR SI YA ESTÁ FACTURADA
+    // ==========================================
+
+    if (venta.factura === true || venta.factura_cae) {
+      return res.status(400).json({
+        error: "Esta venta ya tiene una factura asociada",
+        factura: {
+          tipo: venta.factura_tipo,
+          punto_venta: venta.factura_punto_venta,
+          numero: venta.factura_numero,
+          cae: venta.factura_cae,
+          cae_vencimiento: venta.factura_cae_vencimiento
+        }
+      });
+    }
+
+    // ==========================================
+    // IMPORTE
+    // ==========================================
+
+    const importe = Number(venta.precio_final);
+
+    if (!importe || importe <= 0) {
+      return res.status(400).json({
+        error: "El importe de la venta no es válido"
+      });
+    }
+
+    // ==========================================
+    // DETALLE
+    // ==========================================
+
+    const detalle =
+      `${venta.cantidad} bolsas ${venta.tamano} ${venta.tipo_asa} ${venta.color_bolsa}`;
+
+    // ==========================================
+    // CONSULTAR ÚLTIMO COMPROBANTE
+    // SOLO LECTURA
+    // ==========================================
+
+    const ultimoComprobante =
+      await arca.electronicBillingService.getLastVoucher(4, 11);
+
+    const ultimoNumero =
+      Number(ultimoComprobante.cbteNro || 0);
+
+    const proximoNumero =
+      ultimoNumero + 1;
+
+    // ==========================================
+    // FECHA
+    // ==========================================
+
+    const ahora = new Date();
+
+    const fechaArca =
+      ahora.getFullYear().toString() +
+      String(ahora.getMonth() + 1).padStart(2, "0") +
+      String(ahora.getDate()).padStart(2, "0");
+
+    // ==========================================
+    // RESPUESTA
+    // ==========================================
+
+    res.json({
+      ok: true,
+
+      venta: {
+        id: venta.id,
+        cliente: venta.cliente_nombre,
+        cantidad: venta.cantidad,
+        tamano: venta.tamano,
+        tipo_asa: venta.tipo_asa,
+        color_bolsa: venta.color_bolsa,
+        precio_final: importe
+      },
+
+      factura: {
+        tipo: "C",
+        punto_venta: 4,
+        numero: proximoNumero,
+        fecha: fechaArca,
+        importe: importe,
+        detalle: detalle,
+        documento: {
+          tipo: 99,
+          numero: 0
+        },
+        condicion_iva_receptor: 5
+      },
+
+      arca: {
+        ultimo_comprobante: ultimoNumero,
+        proximo_comprobante: proximoNumero
+      }
+    });
+
+  } catch (error) {
+
+    console.error(
+      "Error preparando factura:",
+      error
+    );
+
+    res.status(500).json({
+      error: "Error al preparar factura"
+    });
+
+  }
+
+});
+
+
+// ======================================================
+// FACTURAR VENTA CON ARCA
+// ======================================================
+
+app.post("/ventas/:id/facturar", async (req, res) => {
+  try {
+
+    const { id } = req.params;
+
+    // ==========================================
+    // 1. OBTENER VENTA
+    // ==========================================
+
+    const ventaResult = await pool.query(`
+      SELECT
+        ventas.*,
+        clientes.nombre AS cliente_nombre,
+        clientes.whatsapp AS cliente_whatsapp,
+        productos.tamano,
+        productos.tipo_asa
+      FROM ventas
+      JOIN clientes
+        ON ventas.cliente_id = clientes.id
+      JOIN productos
+        ON ventas.producto_id = productos.id
+      WHERE ventas.id = $1
+    `, [id]);
+
+    if (ventaResult.rows.length === 0) {
+      return res.status(404).json({
+        error: "Venta no encontrada"
+      });
+    }
+
+    const venta = ventaResult.rows[0];
+
+    // ==========================================
+    // 2. EVITAR FACTURAR DOS VECES
+    // ==========================================
+
+    if (
+      venta.factura === true ||
+      venta.factura_cae
+    ) {
+      return res.status(400).json({
+        error: "Esta venta ya tiene una factura asociada",
+        factura_numero: venta.factura_numero,
+        factura_cae: venta.factura_cae
+      });
+    }
+
+    // ==========================================
+    // 3. DATOS DE LA VENTA
+    // ==========================================
+
+    const importe = Number(venta.precio_final);
+
+    if (!importe || importe <= 0) {
+      return res.status(400).json({
+        error: "El importe de la venta no es válido"
+      });
+    }
+
+    const detalle =
+      `${venta.cantidad} bolsas ${venta.tamano} ${venta.tipo_asa} ${venta.color_bolsa}`;
+
+    // ==========================================
+    // 4. OBTENER ÚLTIMO COMPROBANTE ARCA
+    // ==========================================
+
+    const ultimoComprobante =
+      await arca.electronicBillingService.getLastVoucher(4, 11);
+
+    const ultimoNumero =
+      Number(ultimoComprobante.cbteNro || 0);
+
+    const proximoNumero =
+      ultimoNumero + 1;
+
+    // ==========================================
+    // 5. FECHA
+    // ==========================================
+
+    const ahora = new Date();
+
+    const fechaArca =
+      ahora.getFullYear().toString() +
+      String(ahora.getMonth() + 1).padStart(2, "0") +
+      String(ahora.getDate()).padStart(2, "0");
+
+    // ==========================================
+    // 6. CREAR FACTURA C
+    // ==========================================
+
+    const factura = {
+
+      CantReg: 1,
+
+      PtoVta: 4,
+      CbteTipo: 11,
+
+      Concepto: 1,
+
+      DocTipo: 99,
+      DocNro: 0,
+
+      CbteDesde: proximoNumero,
+      CbteHasta: proximoNumero,
+
+      CbteFch: fechaArca,
+
+      ImpTotal: importe,
+      ImpTotConc: 0,
+      ImpNeto: importe,
+      ImpOpEx: 0,
+      ImpIVA: 0,
+      ImpTrib: 0,
+
+      MonId: "PES",
+      MonCotiz: 1,
+
+      CondicionIVAReceptorId: 5
+    };
+
+    console.log("");
+    console.log("================================");
+    console.log("       FACTURANDO VENTA");
+    console.log("================================");
+
+    console.log("Venta:", venta.id);
+    console.log("Detalle:", detalle);
+    console.log("Importe:", importe);
+    console.log("Comprobante:", proximoNumero);
+
+    // ==========================================
+    // 7. ENVIAR A ARCA
+    // ==========================================
+
+    const respuesta =
+      await arca.electronicBillingService.createInvoice(factura);
+
+    console.log("");
+    console.log("RESPUESTA ARCA:");
+    console.dir(respuesta, { depth: null });
+
+    // ==========================================
+    // 8. OBTENER CAE
+    // ==========================================
+
+    const cae = respuesta.cae;
+const caeFchVto = respuesta.caeFchVto;
+
+// ==========================================
+// VALIDAR AUTORIZACIÓN DE ARCA
+// ==========================================
+
+const resultadoArca =
+  respuesta?.response?.FeDetResp?.FECAEDetResponse?.[0]?.Resultado;
+
+if (resultadoArca !== "A") {
+  throw new Error(
+    `ARCA no autorizó la factura. Resultado: ${resultadoArca || "desconocido"}`
+  );
+}
+
+if (!cae) {
+  throw new Error(
+    "ARCA informó la factura como autorizada pero no devolvió CAE"
+  );
+}
+
+    // ==========================================
+    // 9. GUARDAR FACTURA EN LA VENTA
+    // ==========================================
+
+    const facturaFecha =
+      `${fechaArca.substring(0, 4)}-${fechaArca.substring(4, 6)}-${fechaArca.substring(6, 8)}`;
+
+    const caeVencimiento =
+      caeFchVto
+        ? `${caeFchVto.substring(0, 4)}-${caeFchVto.substring(4, 6)}-${caeFchVto.substring(6, 8)}`
+        : null;
+
+    const updateResult = await pool.query(`
+      UPDATE ventas
+      SET
+        factura = true,
+        factura_tipo = $1,
+        factura_punto_venta = $2,
+        factura_numero = $3,
+        factura_cae = $4,
+        factura_cae_vencimiento = $5,
+        factura_fecha = $6,
+        factura_importe = $7,
+        factura_detalle = $8
+      WHERE id = $9
+      RETURNING *
+    `, [
+      "C",
+      4,
+      proximoNumero,
+      cae,
+      caeVencimiento,
+      facturaFecha,
+      importe,
+      detalle,
+      id
+    ]);
+
+    // ==========================================
+    // 10. RESPUESTA
+    // ==========================================
+
+    res.json({
+      ok: true,
+      message: "Factura emitida correctamente",
+      venta: updateResult.rows[0],
+      factura: {
+        tipo: "C",
+        punto_venta: 4,
+        numero: proximoNumero,
+        cae,
+        cae_vencimiento: caeVencimiento,
+        fecha: facturaFecha,
+        importe,
+        detalle
+      }
+    });
+
+  } catch (error) {
+
+    console.error("");
+    console.error("================================");
+    console.error("       ERROR FACTURANDO");
+    console.error("================================");
+    console.error(error);
+
+    res.status(500).json({
+      error: error.message || "Error al emitir factura"
+    });
+  }
+});
 
 app.listen(process.env.PORT, () => {
   console.log("Servidor corriendo en puerto", process.env.PORT);
