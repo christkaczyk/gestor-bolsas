@@ -1255,6 +1255,72 @@ table thead th:nth-child(20) {
   display: none;
 }
 
+/* =====================================================
+   DROPDOWN DE COLORES - POR ENCIMA DE LA TABLA
+   ===================================================== */
+
+#color-bolsa-dropdown,
+#color-estampa-dropdown {
+  z-index: 99999 !important;
+}
+
+#color-bolsa-btn,
+#color-estampa-btn {
+  position: relative;
+  z-index: 100000;
+}
+
+/* =====================================================
+   DROPDOWN DE COLORES - POR ENCIMA DE LA TABLA
+   ===================================================== */
+
+#color-bolsa-dropdown,
+#color-estampa-dropdown {
+  z-index: 99999 !important;
+}
+
+#color-bolsa-btn,
+#color-estampa-btn {
+  position: relative;
+  z-index: 100000;
+}
+
+/* =====================================================
+   COLORES EN TABLA DE VENTAS
+   ===================================================== */
+
+.color-venta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.color-venta-cuadrado {
+  width: 12px;
+  height: 12px;
+  min-width: 12px;
+  border-radius: 3px;
+  border: 1px solid rgba(15, 23, 42, 0.25);
+  display: inline-block;
+}
+
+/* =====================================================
+   DROPDOWN DE COLORES - CAPA SUPERIOR
+   ===================================================== */
+
+#color-bolsa-dropdown,
+#color-estampa-dropdown {
+  position: fixed !important;
+  z-index: 2147483647 !important;
+  max-height: 280px !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  background: #ffffff !important;
+  isolation: isolate;
+}
+
 </style>
 </head>
 <body class="bg-slate-100 p-6">
@@ -1877,8 +1943,50 @@ table thead th:nth-child(20) {
     <select id="producto" required class="border border-slate-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
     <select id="cantidad" required class="border border-slate-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500"></select>
 
-    <input type="text" id="color_bolsa" placeholder="Color bolsa" class="border border-slate-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500">
-    <input type="text" id="color_estampa" placeholder="Color estampa" class="border border-slate-300 rounded-lg px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-indigo-500">
+    <!-- COLOR BOLSA -->
+<div class="relative">
+  <button
+    type="button"
+    id="color-bolsa-btn"
+    onclick="toggleColorDropdown('bolsa')"
+    class="border border-slate-300 rounded-lg px-3 py-2 w-full bg-white text-left flex items-center gap-2"
+  >
+    <span id="color-bolsa-cuadrado"
+      class="w-4 h-4 rounded-sm border border-slate-300 hidden"></span>
+    <span id="color-bolsa-texto">Color bolsa</span>
+  </button>
+
+  <div
+    id="color-bolsa-dropdown"
+    class="hidden absolute z-50 w-full bg-white border border-slate-300 rounded-lg mt-1 shadow-lg max-h-72 overflow-y-auto"
+  >
+  </div>
+
+  <input type="hidden" id="color_bolsa">
+</div>
+
+
+<!-- COLOR ESTAMPA -->
+<div class="relative">
+  <button
+    type="button"
+    id="color-estampa-btn"
+    onclick="toggleColorDropdown('estampa')"
+    class="border border-slate-300 rounded-lg px-3 py-2 w-full bg-white text-left flex items-center gap-2"
+  >
+    <span id="color-estampa-cuadrado"
+      class="w-4 h-4 rounded-sm border border-slate-300 hidden"></span>
+    <span id="color-estampa-texto">Color estampa</span>
+  </button>
+
+  <div
+    id="color-estampa-dropdown"
+    class="hidden absolute z-50 w-full bg-white border border-slate-300 rounded-lg mt-1 shadow-lg max-h-72 overflow-y-auto"
+  >
+  </div>
+
+  <input type="hidden" id="color_estampa">
+</div>
 
     <label class="flex items-center gap-2">
       <input type="checkbox" id="doble_estampa">
@@ -1923,7 +2031,7 @@ table thead th:nth-child(20) {
 
   <div class="overflow-x-auto">
     <table class="min-w-full text-sm text-left">
-      <thead class="bg-slate-800 text-white sticky top-0 z-10">
+      <thead class="bg-slate-800 text-white">
         <tr class="text-center">
           <th class="px-3 py-2">Fecha</th>
           <th class="px-3 py-2">Cliente</th>
@@ -2150,7 +2258,234 @@ document.addEventListener(
 
 <script>
 
+// =====================================================
+// SELECTOR DE COLORES
+// =====================================================
 
+const coloresDisponibles = [
+  { nombre: "Blanco", color: "#dcdee2" },
+  { nombre: "Negro", color: "#1a1a1a" },
+  { nombre: "Crudo", color: "#ccb3a7" },
+  { nombre: "Rosa", color: "#dea4c3" },
+  { nombre: "Fucsia", color: "#ab2584" },
+  { nombre: "Violeta", color: "#5f2477" },
+  { nombre: "Azul", color: "#1a2597" },
+  { nombre: "Rojo", color: "#8e1e20" },
+  { nombre: "Naranja", color: "#c6591e" },
+  { nombre: "Amarillo", color: "#dfba22" },
+  { nombre: "Azul Marino", color: "#193150" },
+  { nombre: "Verde", color: "#056d2e" },
+  { nombre: "Verde Manzana", color: "#4fbc41" },
+  { nombre: "Celeste", color: "#0799c5" },
+  { nombre: "Dorado", color: "#a48b3e" },
+  { nombre: "Marrón Oscuro", color: "#582c04" },
+  { nombre: "Marrón Claro", color: "#926c49" },
+  { nombre: "Bordó", color: "#670707" },
+  { nombre: "Crema", color: "#e5b47a" },
+  { nombre: "Natural", color: "#f9eb9f" },
+  { nombre: "Gris Plata", color: "#a0a0a0" },
+  { nombre: "Celeste Pastel", color: "#bdeefd" },
+  { nombre: "Lila", color: "#f0a0fe" },
+  { nombre: "Verde Pastel", color: "#c2fab9" }
+];
+
+function obtenerColorHex(nombre) {
+
+  const colorEncontrado = coloresDisponibles.find(
+    c => c.nombre.toLowerCase() === String(nombre || "").toLowerCase()
+  );
+
+  return colorEncontrado
+    ? colorEncontrado.color
+    : "#d1d5db";
+}
+
+
+function mostrarColorVenta(nombre) {
+
+  if (!nombre) {
+    return "-";
+  }
+
+  const colorHex = obtenerColorHex(nombre);
+
+  return `
+    <span class="color-venta">
+      <span
+        class="color-venta-cuadrado"
+        style="background-color: ${colorHex};"
+      ></span>
+      <span>${nombre}</span>
+    </span>
+  `;
+}
+
+function cargarColoresDropdown(tipo) {
+
+  const dropdown = document.getElementById(
+    `color-${tipo}-dropdown`
+  );
+
+  if (!dropdown) return;
+
+  dropdown.innerHTML = "";
+
+  coloresDisponibles.forEach(color => {
+
+    const opcion = document.createElement("button");
+
+    opcion.type = "button";
+
+    opcion.className =
+      "w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-slate-100";
+
+    opcion.innerHTML = `
+      <span
+        class="w-5 h-5 rounded-sm border border-slate-300 flex-shrink-0"
+        style="background-color: ${color.color};"
+      ></span>
+
+      <span>${color.nombre}</span>
+    `;
+
+    opcion.addEventListener("click", function() {
+
+      seleccionarColor(
+        tipo,
+        color.nombre,
+        color.color
+      );
+
+    });
+
+    dropdown.appendChild(opcion);
+
+  });
+
+}
+
+
+window.toggleColorDropdown = function(tipo) {
+
+  const dropdown = document.getElementById(
+    `color-${tipo}-dropdown`
+  );
+
+  const boton = document.getElementById(
+    `color-${tipo}-btn`
+  );
+
+  if (!dropdown || !boton) return;
+
+  const estaOculto = dropdown.classList.contains("hidden");
+
+  // Cerrar ambos dropdowns
+  document.getElementById("color-bolsa-dropdown")
+    ?.classList.add("hidden");
+
+  document.getElementById("color-estampa-dropdown")
+    ?.classList.add("hidden");
+
+  if (!estaOculto) return;
+
+  // Mover el dropdown al BODY para evitar
+  // que lo corte el contenedor de Nueva Venta
+  if (dropdown.parentElement !== document.body) {
+    document.body.appendChild(dropdown);
+  }
+
+  const rect = boton.getBoundingClientRect();
+
+  dropdown.classList.remove("hidden");
+
+  dropdown.style.position = "fixed";
+  dropdown.style.left = `${rect.left}px`;
+  dropdown.style.top = `${rect.bottom + 4}px`;
+  dropdown.style.width = `${rect.width}px`;
+  dropdown.style.zIndex = "2147483647";
+
+};
+
+document.addEventListener("click", function(e) {
+
+  const bolsaDropdown =
+    document.getElementById("color-bolsa-dropdown");
+
+  const estampaDropdown =
+    document.getElementById("color-estampa-dropdown");
+
+  const bolsaBtn =
+    document.getElementById("color-bolsa-btn");
+
+  const estampaBtn =
+    document.getElementById("color-estampa-btn");
+
+
+  if (
+    bolsaDropdown &&
+    !bolsaDropdown.contains(e.target) &&
+    !bolsaBtn.contains(e.target)
+  ) {
+    bolsaDropdown.classList.add("hidden");
+  }
+
+
+  if (
+    estampaDropdown &&
+    !estampaDropdown.contains(e.target) &&
+    !estampaBtn.contains(e.target)
+  ) {
+    estampaDropdown.classList.add("hidden");
+  }
+
+});
+
+
+window.seleccionarColor = function(tipo, nombre, color) {
+
+  const input = document.getElementById(
+    `color_${tipo}`
+  );
+
+  const texto = document.getElementById(
+    `color-${tipo}-texto`
+  );
+
+  const cuadrado = document.getElementById(
+    `color-${tipo}-cuadrado`
+  );
+
+  const dropdown = document.getElementById(
+    `color-${tipo}-dropdown`
+  );
+
+  if (input) {
+    input.value = nombre;
+  }
+
+  if (texto) {
+    texto.innerText = nombre;
+  }
+
+  if (cuadrado) {
+  cuadrado.style.backgroundColor = color;
+  cuadrado.classList.remove("hidden");
+}
+
+  if (dropdown) {
+    dropdown.classList.add("hidden");
+  }
+
+};
+
+
+document.addEventListener("DOMContentLoaded", function() {
+
+  cargarColoresDropdown("bolsa");
+
+  cargarColoresDropdown("estampa");
+
+});
 
   let sumaActiva = false;
 let sumaTotal = 0;
@@ -2616,8 +2951,13 @@ Object.values(ventasPorMes).forEach(mes => {
       <td>${v.archivo_codigo}</td>
       <td>${v.tamano} ${v.tipo_asa}</td>
       <td>${v.cantidad}</td>
-      <td>${v.color_bolsa}</td>
-      <td>${v.color_estampa}</td>
+      <td>
+  ${mostrarColorVenta(v.color_bolsa)}
+</td>
+
+<td>
+  ${mostrarColorVenta(v.color_estampa)}
+</td>
       <td>${v.doble_estampa ? "SI" : "NO"}</td>
       <td>
 ${
@@ -3248,6 +3588,7 @@ document.getElementById("filtro-periodo").addEventListener("change", () => {
   crearGraficoFacturacion();
 
 });
+
 
   document.getElementById("producto").addEventListener("change", (e) => {
     cargarPacks(e.target.value);
@@ -4085,7 +4426,44 @@ let clienteSeleccionadoId = null;
 let clienteEditandoId = null;
 
 window.toggleClienteDropdown = function() {
-  document.getElementById("cliente-dropdown").classList.toggle("hidden");
+
+  const dropdown = document.getElementById("cliente-dropdown");
+  const boton = document.getElementById("cliente-boton");
+
+  if (!dropdown || !boton) return;
+
+  const estaOculto = dropdown.classList.contains("hidden");
+
+  // Cerrar dropdowns de colores
+  document.getElementById("color-bolsa-dropdown")
+    ?.classList.add("hidden");
+
+  document.getElementById("color-estampa-dropdown")
+    ?.classList.add("hidden");
+
+  // Si estaba abierto, simplemente cerrarlo
+  if (!estaOculto) {
+    dropdown.classList.add("hidden");
+    return;
+  }
+
+  // Mover el dropdown al BODY
+  // para que pueda quedar por encima de todos los demás elementos
+  if (dropdown.parentElement !== document.body) {
+    document.body.appendChild(dropdown);
+  }
+
+  // Obtener posición del botón
+  const rect = boton.getBoundingClientRect();
+
+  // Mostrar como elemento fijo
+  dropdown.classList.remove("hidden");
+
+  dropdown.style.position = "fixed";
+  dropdown.style.left = `${rect.left}px`;
+  dropdown.style.top = `${rect.bottom + 4}px`;
+  dropdown.style.width = `${rect.width}px`;
+  dropdown.style.zIndex = "2147483647";
 };
 
 function abrirModalConfig() {
