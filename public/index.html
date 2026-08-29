@@ -1233,6 +1233,28 @@
 
 }
 
+/* =====================================================
+   TABLA DE VENTAS - COLUMNAS SECUNDARIAS OCULTAS
+   ===================================================== */
+
+/* Encabezados */
+table thead th:nth-child(15),
+table thead th:nth-child(16),
+table thead th:nth-child(17),
+table thead th:nth-child(18),
+table thead th:nth-child(20) {
+  display: none;
+}
+
+/* Datos de las ventas */
+#tabla-ventas tr:not(.fila-mes) td:nth-child(15),
+#tabla-ventas tr:not(.fila-mes) td:nth-child(16),
+#tabla-ventas tr:not(.fila-mes) td:nth-child(17),
+#tabla-ventas tr:not(.fila-mes) td:nth-child(18),
+#tabla-ventas tr:not(.fila-mes) td:nth-child(20) {
+  display: none;
+}
+
 </style>
 </head>
 <body class="bg-slate-100 p-6">
@@ -1893,7 +1915,7 @@
 <button 
   onclick="crearNuevoMes()" 
   class="bg-indigo-600 text-white px-4 py-2 rounded-lg">
-  + MES
+  CREAR MES
 </button>
 </div>
 
@@ -1902,7 +1924,7 @@
   <div class="overflow-x-auto">
     <table class="min-w-full text-sm text-left">
       <thead class="bg-slate-800 text-white sticky top-0 z-10">
-        <tr>
+        <tr class="text-center">
           <th class="px-3 py-2">Fecha</th>
           <th class="px-3 py-2">Cliente</th>
           <th class="px-3 py-2">WSP</th>
@@ -1918,12 +1940,12 @@
           <th class="px-3 py-2 text-center">
   <div class="flex flex-col items-center gap-1">
 
-    <button onclick="sumarRestantes()" 
-    class="bg-green-500 hover:bg-green-600 text-white w-5 h-5 rounded text-xs font-bold leading-none">
-      +
-    </button>
-
-    <span>Restante</span>
+    <button
+  onclick="abrirModalRestantes()"
+  class="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded-md text-xs font-bold cursor-pointer"
+>
+  Restante
+</button>
 
   </div>
 </th>
@@ -1951,6 +1973,86 @@
       </thead>
       <tbody id="tabla-ventas" class="divide-y divide-slate-200"></tbody>
     </table>
+  </div>
+
+</div>
+
+<!-- ==========================================================
+     MODAL DETALLE DE VENTA
+     ========================================================== -->
+
+<div
+  id="modal-detalle-venta"
+  class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4"
+>
+
+  <div
+    class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-y-auto"
+  >
+
+    <!-- HEADER -->
+
+    <div
+      class="flex items-center justify-between px-6 py-4"
+      style="background:#897ff7;"
+    >
+
+      <div>
+        <h2 class="text-xl font-bold text-white">
+          Detalle de venta
+        </h2>
+
+        <p
+          id="modal-detalle-subtitulo"
+          class="text-sm text-white opacity-80"
+        >
+          Información completa
+        </p>
+      </div>
+
+      <button
+        onclick="cerrarModalVenta()"
+        class="text-white text-2xl font-bold hover:opacity-70"
+      >
+        ×
+      </button>
+
+    </div>
+
+
+    <!-- CONTENIDO -->
+
+    <div
+      id="contenido-detalle-venta"
+      class="p-6"
+    >
+    </div>
+
+
+    <!-- FOOTER -->
+
+    <div
+  class="flex justify-between items-center px-6 py-4 border-t bg-slate-50"
+>
+
+  <button
+    id="btn-historial-venta"
+    class="px-5 py-2 rounded-lg font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition"
+  >
+    📋 Ver historial
+  </button>
+
+
+  <button
+    onclick="cerrarModalVenta()"
+    class="px-5 py-2 rounded-lg text-white font-semibold hover:opacity-90 transition"
+    style="background:#897ff7;"
+  >
+    Cerrar
+  </button>
+
+</div>
+
   </div>
 
 </div>
@@ -2529,7 +2631,12 @@ ${
    >
      ✈️ $${formatearPesos(v.envio_monto)}
    </span>`
-    : "-"
+    : `<span 
+        class="text-black-600 font-semibold"
+        title="Retira por el local"
+      >
+        🏠 RETIRA
+      </span>`
 }
 </td>
       <td onclick="editarPrecio(this, ${v.id}, ${v.precio_final})"
@@ -2578,6 +2685,11 @@ ${
         </button>
       </td>
       <td class="flex gap-2 items-center">
+        <button
+  onclick="abrirModalVenta(${v.id})"
+  class="bg-indigo-500 hover:bg-indigo-600 text-white px-2 py-1 rounded text-xs">
+  Más
+</button>
         <select 
           onchange="cambiarEtapa(${v.id}, this.value)"
           class="border rounded px-2 py-1 text-sm"
@@ -3328,6 +3440,460 @@ async function crearCliente() {
     alert("Error al crear cliente");
   }
 }
+
+// ==========================================================
+// MODAL DETALLE DE VENTA
+// ==========================================================
+
+window.abrirModalVenta = function(id) {
+
+  const venta = ventasGlobal.find(
+    v => Number(v.id) === Number(id)
+  );
+
+  if (!venta) {
+    alert("No se encontró la venta.");
+    return;
+  }
+
+
+  // --------------------------------------------------------
+  // ENVÍO
+  // --------------------------------------------------------
+
+  let envioHTML = "-";
+
+  if (Number(venta.envio_monto) > 0) {
+
+    if (Number(venta.envio_monto) <= 8000) {
+
+      envioHTML =
+        `🚗 $${formatearPesos(venta.envio_monto)}`;
+
+    } else {
+
+      envioHTML =
+        `✈️ $${formatearPesos(venta.envio_monto)}`;
+
+    }
+
+  }
+
+
+  // --------------------------------------------------------
+  // ARCA
+  // --------------------------------------------------------
+
+  let arcaHTML = "No facturada";
+
+  if (venta.factura && venta.factura_cae) {
+
+    arcaHTML = `
+      <span class="text-green-600 font-semibold">
+        ✓ Facturada
+      </span>
+    `;
+
+  }
+
+
+  // --------------------------------------------------------
+  // CONTENIDO
+  // --------------------------------------------------------
+
+  document.getElementById(
+    "contenido-detalle-venta"
+  ).innerHTML = `    <div class="space-y-5">
+
+      <!-- ============================= -->
+      <!-- CLIENTE -->
+      <!-- ============================= -->
+
+      <div>
+        <h3 class="text-sm font-bold text-slate-800 mb-3">
+          👤 Cliente
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+          <div class="bg-slate-50 rounded-xl p-4">
+            <div class="text-xs text-slate-400 uppercase">
+              Cliente
+            </div>
+
+            <div class="font-semibold text-slate-800 mt-1">
+              ${venta.nombre || "-"}
+            </div>
+          </div>
+
+          <div class="bg-slate-50 rounded-xl p-4">
+            <div class="text-xs text-slate-400 uppercase">
+              WhatsApp
+            </div>
+
+            <div class="font-semibold text-slate-800 mt-1">
+              ${venta.whatsapp || "-"}
+            </div>
+          </div>
+
+          <div class="bg-slate-50 rounded-xl p-4">
+            <div class="text-xs text-slate-400 uppercase">
+              Archivo
+            </div>
+
+            <div class="font-semibold text-slate-800 mt-1">
+              ${venta.archivo_codigo || "-"}
+            </div>
+          </div>
+
+          <div class="bg-slate-50 rounded-xl p-4">
+            <div class="text-xs text-slate-400 uppercase">
+              Fecha
+            </div>
+
+            <div class="font-semibold text-slate-800 mt-1">
+              ${formatearFecha(venta.fecha)}
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+
+      <!-- ============================= -->
+      <!-- PEDIDO -->
+      <!-- ============================= -->
+
+      <div>
+
+        <h3 class="text-sm font-bold text-slate-800 mb-3">
+          🛍️ Pedido
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+          <div class="bg-slate-50 rounded-xl p-4">
+
+            <div class="text-xs text-slate-400 uppercase">
+              Producto
+            </div>
+
+            <div class="font-semibold text-slate-800 mt-1">
+              ${venta.tamano || "-"} ${venta.tipo_asa || ""}
+            </div>
+
+          </div>
+
+
+          <div class="bg-slate-50 rounded-xl p-4">
+
+            <div class="text-xs text-slate-400 uppercase">
+              Pack
+            </div>
+
+            <div class="font-semibold text-slate-800 mt-1">
+              ${venta.cantidad || "-"} bolsas
+            </div>
+
+          </div>
+
+
+          <div class="bg-slate-50 rounded-xl p-4">
+
+            <div class="text-xs text-slate-400 uppercase">
+              Color de bolsa
+            </div>
+
+            <div class="font-semibold text-slate-800 mt-1">
+              ${venta.color_bolsa || "-"}
+            </div>
+
+          </div>
+
+
+          <div class="bg-slate-50 rounded-xl p-4">
+
+            <div class="text-xs text-slate-400 uppercase">
+              Color de estampa
+            </div>
+
+            <div class="font-semibold text-slate-800 mt-1">
+              ${venta.color_estampa || "-"}
+            </div>
+
+          </div>
+
+
+          <div class="bg-slate-50 rounded-xl p-4">
+
+            <div class="text-xs text-slate-400 uppercase">
+              Doble estampa
+            </div>
+
+            <div class="font-semibold text-slate-800 mt-1">
+              ${venta.doble_estampa ? "Sí" : "No"}
+            </div>
+
+          </div>
+
+
+          <div class="bg-slate-50 rounded-xl p-4">
+
+            <div class="text-xs text-slate-400 uppercase">
+              Fecha de entrega
+            </div>
+
+            <div class="font-semibold text-slate-800 mt-1">
+              ${
+                venta.fecha_entrega
+                  ? formatearFecha(venta.fecha_entrega)
+                  : "-"
+              }
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- ============================= -->
+      <!-- FINANZAS -->
+      <!-- ============================= -->
+
+      <div>
+
+        <h3 class="text-sm font-bold text-slate-800 mb-3">
+          💰 Finanzas
+        </h3>
+
+
+        <div class="grid grid-cols-2 gap-3">
+
+
+          <!-- PRECIO -->
+
+          <div class="bg-green-50 rounded-xl p-4">
+
+            <div class="text-xs text-green-600 uppercase">
+              Precio
+            </div>
+
+            <div class="font-bold text-green-700 text-xl mt-1">
+              $${formatearPesos(venta.precio_final)}
+            </div>
+
+          </div>
+
+
+          <!-- COSTO -->
+
+          <div class="bg-red-50 rounded-xl p-4">
+
+            <div class="text-xs text-red-500 uppercase">
+              Costo
+            </div>
+
+            <div class="font-bold text-red-600 text-xl mt-1">
+              $${formatearPesos(venta.costo_total)}
+            </div>
+
+          </div>
+
+
+          <!-- GANANCIA -->
+
+          <div class="bg-emerald-50 rounded-xl p-4">
+
+            <div class="text-xs text-emerald-600 uppercase">
+              Ganancia
+            </div>
+
+            <div class="font-bold text-emerald-700 text-xl mt-1">
+              $${formatearPesos(venta.ganancia_total)}
+            </div>
+
+          </div>
+
+
+          <!-- NETA -->
+
+          <div class="bg-indigo-50 rounded-xl p-4">
+
+            <div class="text-xs text-indigo-600 uppercase">
+              Ganancia neta
+            </div>
+
+            <div class="font-bold text-indigo-700 text-xl mt-1">
+              $${formatearPesos(venta.ganancia_personal)}
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <!-- SEÑA / RESTANTE -->
+
+        <div class="grid grid-cols-2 gap-3 mt-3">
+
+          <div class="bg-blue-50 rounded-xl p-4">
+
+            <div class="text-xs text-blue-600 uppercase">
+              Seña
+            </div>
+
+            <div class="font-bold text-blue-700 text-lg mt-1">
+              $${formatearPesos(venta.sena)}
+            </div>
+
+          </div>
+
+
+          <div class="bg-yellow-50 rounded-xl p-4">
+
+            <div class="text-xs text-yellow-600 uppercase">
+              Restante
+            </div>
+
+            <div class="font-bold text-yellow-700 text-lg mt-1">
+              $${formatearPesos(venta.restante)}
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- ============================= -->
+      <!-- ENVÍO / ESTADO -->
+      <!-- ============================= -->
+
+      <div>
+
+        <h3 class="text-sm font-bold text-slate-800 mb-3">
+          🚚 Envío y estado
+        </h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+
+
+          <div class="bg-slate-50 rounded-xl p-4">
+
+            <div class="text-xs text-slate-400 uppercase">
+              Envío
+            </div>
+
+            <div class="font-semibold text-slate-800 mt-1">
+              ${envioHTML}
+            </div>
+
+          </div>
+
+
+          <div class="bg-slate-50 rounded-xl p-4">
+
+            <div class="text-xs text-slate-400 uppercase">
+              Estado
+            </div>
+
+            <div class="font-semibold text-slate-800 mt-1">
+              ${venta.etapa || "-"}
+            </div>
+
+          </div>
+
+
+          <div class="bg-slate-50 rounded-xl p-4">
+
+            <div class="text-xs text-slate-400 uppercase">
+              ARCA
+            </div>
+
+            <div class="font-semibold mt-1">
+              ${arcaHTML}
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- ============================= -->
+      <!-- TALLER -->
+      <!-- ============================= -->
+
+      <div class="bg-purple-50 rounded-xl p-4">
+
+        <div class="text-xs text-purple-600 uppercase">
+          Ganancia taller
+        </div>
+
+        <div class="font-bold text-purple-700 text-xl mt-1">
+          $${formatearPesos(venta.ganancia_taller)}
+        </div>
+
+      </div>
+
+    </div>
+
+  `;
+
+
+  // --------------------------------------------------------
+  // SUBTÍTULO
+  // --------------------------------------------------------
+
+  document.getElementById(
+    "modal-detalle-subtitulo"
+  ).textContent =
+    `${venta.nombre || "Venta"} · ${venta.tamano || ""}`;
+
+
+  // --------------------------------------------------------
+  // ABRIR
+  // --------------------------------------------------------
+
+  document
+    .getElementById("modal-detalle-venta")
+    .classList.remove("hidden");
+
+  document
+    .getElementById("modal-detalle-venta")
+    .classList.add("flex");
+
+const btnHistorialVenta = document.getElementById("btn-historial-venta");
+
+if (btnHistorialVenta) {
+  btnHistorialVenta.onclick = function () {
+    verHistorial(venta.cliente_id);
+  };
+}
+
+
+};
+
+
+// ==========================================================
+// CERRAR MODAL
+// ==========================================================
+
+window.cerrarModalVenta = function() {
+
+  document
+    .getElementById("modal-detalle-venta")
+    .classList.add("hidden");
+
+  document
+    .getElementById("modal-detalle-venta")
+    .classList.remove("flex");
+
+};
 
 window.verHistorial = async function(cliente_id) {
 
@@ -6339,28 +6905,132 @@ function abrirCorreo() {
 
 }
 
-window.sumarRestantes = function(){
+window.abrirModalRestantes = function() {
 
   let total = 0;
 
-  ventasGlobal.forEach(v => {
+  const ventasPendientes = ventasGlobal.filter(v => {
 
-    if(
+    return (
       v.etapa === "comprar" ||
       v.etapa === "sena" ||
       v.etapa === "terminado"
-    ){
-      total += Number(v.restante);
-    }
+    );
 
   });
 
-  alert(
-    "Total restante:\n\n$" +
-    new Intl.NumberFormat("es-AR").format(total)
-  );
 
-}
+  // ==========================================
+  // CALCULAR TOTAL
+  // ==========================================
+
+  ventasPendientes.forEach(v => {
+
+    total += Number(v.restante) || 0;
+
+  });
+
+
+  // ==========================================
+  // MOSTRAR TOTAL
+  // ==========================================
+
+  document.getElementById(
+    "total-restante-modal"
+  ).textContent =
+    "$" + new Intl.NumberFormat("es-AR").format(total);
+
+
+  // ==========================================
+  // GENERAR LISTA
+  // ==========================================
+
+  const lista =
+    document.getElementById("lista-restantes-modal");
+
+
+  if (ventasPendientes.length === 0) {
+
+    lista.innerHTML = `
+      <div class="text-center py-8 text-slate-400">
+        No hay dinero pendiente de cobrar.
+      </div>
+    `;
+
+  } else {
+
+    lista.innerHTML = ventasPendientes.map(v => {
+
+      return `
+
+        <div
+          class="flex items-center justify-between
+                 bg-slate-50 hover:bg-slate-100
+                 rounded-xl px-4 py-3"
+        >
+
+          <div>
+
+            <div class="font-semibold text-slate-800">
+              ${v.nombre || "Sin cliente"}
+            </div>
+
+            <div class="text-xs text-slate-400 mt-1">
+              ${v.tamano || "-"}
+              ·
+              ${v.cantidad || 0} bolsas
+              ·
+              ${v.etapa || "-"}
+            </div>
+
+          </div>
+
+
+          <div class="text-right">
+
+            <div class="font-bold text-green-600">
+              $${new Intl.NumberFormat("es-AR").format(
+                Number(v.restante) || 0
+              )}
+            </div>
+
+            <div class="text-xs text-slate-400">
+              restante
+            </div>
+
+          </div>
+
+        </div>
+
+      `;
+
+    }).join("");
+
+  }
+
+
+  // ==========================================
+  // ABRIR MODAL
+  // ==========================================
+
+  const modal =
+    document.getElementById("modalRestantes");
+
+  modal.classList.remove("hidden");
+  modal.classList.add("flex");
+
+};
+
+
+window.cerrarModalRestantes = function() {
+
+  const modal =
+    document.getElementById("modalRestantes");
+
+  modal.classList.add("hidden");
+  modal.classList.remove("flex");
+
+};
 
 window.sumarGanancias = function(){
 
@@ -7039,6 +7709,101 @@ function actualizarTituloDashboard() {
       placeholder="Aquí se generará el resumen..."></textarea>
 
   </div>
+</div>
+
+<!-- ==========================================================
+     MODAL DINERO RESTANTE
+     ========================================================== -->
+
+<div
+  id="modalRestantes"
+  class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50 p-4"
+>
+
+  <div
+    class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden"
+  >
+
+    <!-- HEADER -->
+
+    <div
+      class="px-6 py-5 flex justify-between items-center"
+      style="background:#897ff7;"
+    >
+
+      <div>
+
+        <h2 class="text-xl font-bold text-white">
+          Dinero restante
+        </h2>
+
+        <p class="text-sm text-white opacity-80">
+          Dinero pendiente de cobrar
+        </p>
+
+      </div>
+
+      <button
+        onclick="cerrarModalRestantes()"
+        class="text-white text-2xl font-bold hover:opacity-70"
+      >
+        ×
+      </button>
+
+    </div>
+
+
+    <!-- TOTAL -->
+
+    <div class="p-6">
+
+      <div
+        class="bg-green-50 border border-green-100 rounded-2xl p-5 mb-5"
+      >
+
+        <div class="text-sm text-green-600">
+          Total pendiente de cobrar
+        </div>
+
+        <div
+          id="total-restante-modal"
+          class="text-3xl font-bold text-green-700 mt-1"
+        >
+          $0
+        </div>
+
+      </div>
+
+
+      <!-- LISTA -->
+
+      <div
+        id="lista-restantes-modal"
+        class="space-y-2 max-h-[400px] overflow-y-auto"
+      >
+      </div>
+
+    </div>
+
+
+    <!-- FOOTER -->
+
+    <div
+      class="px-6 py-4 border-t bg-slate-50 flex justify-end"
+    >
+
+      <button
+        onclick="cerrarModalRestantes()"
+        class="px-5 py-2 rounded-lg text-white font-semibold"
+        style="background:#897ff7;"
+      >
+        Cerrar
+      </button>
+
+    </div>
+
+  </div>
+
 </div>
 
 <div id="modalEstadisticas" class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
