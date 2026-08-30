@@ -884,6 +884,236 @@ app.listen(process.env.PORT, () => {
   console.log("Servidor corriendo en puerto", process.env.PORT);
 });
 
+
+// ======================================================
+// CAMBIAR CATEGORÍA ARCA
+// ======================================================
+
+app.put("/arca-categoria", async (req, res) => {
+  try {
+
+    const { categoria } = req.body;
+
+    const categoriasValidas = [
+      "A", "B", "C", "D", "E", "F",
+      "G", "H", "I", "J", "K"
+    ];
+
+    if (!categoriasValidas.includes(categoria)) {
+      return res.status(400).json({
+        ok: false,
+        error: "Categoría ARCA inválida"
+      });
+    }
+
+    const result = await pool.query(
+      `
+      UPDATE arca_configuracion
+      SET categoria = $1,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = 1
+      RETURNING *
+      `,
+      [categoria]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        ok: false,
+        error: "No existe configuración ARCA"
+      });
+    }
+
+    res.json({
+      ok: true,
+      message: "Categoría ARCA actualizada correctamente",
+      categoria: result.rows[0].categoria
+    });
+
+  } catch (error) {
+
+    console.error("Error cambiando categoría ARCA:", error);
+
+    res.status(500).json({
+      ok: false,
+      error: "Error al cambiar categoría ARCA"
+    });
+
+  }
+});
+
+// ======================================================
+// RESUMEN DE FACTURACIÓN ARCA - ÚLTIMOS 12 MESES
+// ======================================================
+
+app.get("/arca-resumen", async (req, res) => {
+
+  try {
+
+    // ==================================================
+// OBTENER CATEGORÍA ARCA ACTUAL
+// ==================================================
+
+const configArca = await pool.query(`
+  SELECT
+    c.categoria,
+    c.tope
+  FROM arca_configuracion ac
+  INNER JOIN arca_categorias c
+    ON c.categoria = ac.categoria
+  WHERE ac.id = 1
+  LIMIT 1
+`);
+
+
+if (configArca.rows.length === 0) {
+
+  throw new Error(
+    "No existe configuración ARCA"
+  );
+
+}
+
+
+const arcaCategoria =
+  configArca.rows[0].categoria;
+
+
+const arcaTope =
+  Number(configArca.rows[0].tope) || 0;
+
+
+    // ==================================================
+    // 1. FACTURACIÓN REALIZADA DESDE LA WEB APP
+    // ==================================================
+
+    const facturasResult = await pool.query(`
+      SELECT
+        COALESCE(SUM(factura_importe), 0) AS total_facturado,
+        COUNT(*) AS cantidad_comprobantes,
+        MIN(factura_fecha) AS primera_factura,
+        MAX(factura_fecha) AS ultima_factura
+
+      FROM ventas
+
+      WHERE factura = true
+
+        AND factura_fecha IS NOT NULL
+
+        AND factura_fecha >= CURRENT_DATE - INTERVAL '12 months'
+
+        AND factura_fecha <= CURRENT_DATE
+    `);
+
+
+    const fila = facturasResult.rows[0];
+
+
+    const facturadoApp =
+      Number(fila.total_facturado) || 0;
+
+
+    // ==================================================
+    // 2. FACTURACIÓN HISTÓRICA ARCA
+    // ==================================================
+
+    const historicoResult = await pool.query(`
+      SELECT
+        COALESCE(SUM(monto), 0) AS total_historico
+
+      FROM arca_historico
+
+      WHERE fecha_corte >= CURRENT_DATE - INTERVAL '12 months'
+
+        AND fecha_corte <= CURRENT_DATE
+    `);
+
+
+    const facturadoHistorico =
+      Number(historicoResult.rows[0].total_historico) || 0;
+
+
+    // ==================================================
+    // 3. TOTAL GENERAL
+    // ==================================================
+
+    const facturado =
+      facturadoHistorico + facturadoApp;
+
+
+    // ==================================================
+    // 4. PORCENTAJE
+    // ==================================================
+
+    const porcentaje =
+  arcaTope > 0
+    ? (facturado / arcaTope) * 100
+    : 0;
+
+
+    // ==================================================
+    // 5. RESPUESTA
+    // ==================================================
+
+    res.json({
+
+      ok: true,
+
+      categoria: arcaCategoria,
+
+tope: arcaTope,
+
+      facturado: facturado,
+
+      facturado_historico: facturadoHistorico,
+
+      facturado_app: facturadoApp,
+
+      porcentaje: porcentaje,
+
+      excedente: Math.max(
+  0,
+  facturado - arcaTope
+),
+
+disponible: Math.max(
+  0,
+  arcaTope - facturado
+),
+
+      comprobantes:
+        Number(fila.cantidad_comprobantes) || 0,
+
+      primera_factura:
+        fila.primera_factura,
+
+      ultima_factura:
+        fila.ultima_factura
+
+    });
+
+
+  } catch (error) {
+
+    console.error(
+      "Error obteniendo resumen ARCA:",
+      error
+    );
+
+
+    res.status(500).json({
+
+      ok: false,
+
+      error:
+        "Error al obtener facturación ARCA"
+
+    });
+
+  }
+
+});
+
 // ======================================================
 // INGRESOS / EGRESOS
 // ======================================================

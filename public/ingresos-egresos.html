@@ -209,6 +209,143 @@
   border-left: 4px solid #ef4444;
 }
 
+/* ======================================================
+   INDICADOR DE FACTURACIÓN ARCA
+   ====================================================== */
+
+.arca-indicador {
+  flex: 1;
+  min-width: 235px;
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.06);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.arca-indicador:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.10);
+}
+
+.arca-indicador-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  font-size: 12px;
+  font-weight: 800;
+  color: #334155;
+
+  margin-bottom: 7px;
+}
+
+.arca-indicador-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+
+  margin-top: 6px;
+
+  font-size: 11px;
+  color: #64748b;
+}
+
+
+/* Barra */
+
+.arca-barra {
+  width: 100%;
+  height: 8px;
+
+  overflow: hidden;
+
+  border-radius: 999px;
+
+  background: #e5e7eb;
+}
+
+.arca-barra-progreso {
+  width: 0%;
+  height: 100%;
+
+  border-radius: inherit;
+
+  background: #22c55e;
+
+  transition:
+    width 0.4s ease,
+    background 0.25s ease;
+}
+
+
+/* Estados */
+
+.arca-indicador.arca-alerta
+.arca-barra-progreso {
+  background: #f59e0b;
+}
+
+.arca-indicador.arca-peligro
+.arca-barra-progreso {
+  background: #ef4444;
+}
+
+.arca-indicador.arca-excedido
+.arca-barra-progreso {
+  background: #dc2626;
+}
+
+
+/* Responsive */
+
+@media (max-width: 640px) {
+
+  .arca-indicador {
+    width: 100%;
+    min-width: 0;
+  }
+
+}
+
+/* ======================================================
+   MODAL ARCA - DISEÑO COMPACTO
+   ====================================================== */
+
+.arca-modal-card {
+  max-width: 520px;
+}
+
+.arca-modal-card > div:first-child {
+  padding: 18px 22px;
+}
+
+.arca-modal-card > div:nth-child(2) {
+  padding: 20px 22px;
+  gap: 14px;
+}
+
+.arca-modal-card h2 {
+  font-size: 20px;
+}
+
+.arca-modal-card .arca-resumen-box {
+  padding: 14px;
+}
+
+.arca-modal-card .arca-dato {
+  padding: 6px 0;
+}
+
+.arca-modal-card #arcaAlertaModal {
+  padding: 10px 12px;
+}
+
   </style>
 </head>
 
@@ -481,6 +618,33 @@
 
 </button>
 
+<!-- INDICADOR ARCA -->
+<button
+  type="button"
+  onclick="abrirModalArca()"
+  id="btnIndicadorArca"
+  class="arca-indicador"
+  title="Ver facturación ARCA de los últimos 12 meses">
+
+  <div class="arca-indicador-top">
+  <span>🧾 ARCA - CATEGORÍA ACTUAL: <span id="arcaCategoriaIndicador">D</span></span>
+  <span id="arcaPorcentaje">--%</span>
+</div>
+
+  <div class="arca-barra">
+    <div
+      id="arcaBarraProgreso"
+      class="arca-barra-progreso">
+    </div>
+  </div>
+
+  <div class="arca-indicador-bottom">
+    <span id="arcaMontoFacturado">$0</span>
+    <span id="arcaTope">$0</span>
+  </div>
+
+</button>
+
   </div>
 
   <!-- ==================================================== -->
@@ -749,6 +913,258 @@
 
 
 </main>
+
+<!-- ======================================================
+     MODAL FACTURACIÓN ARCA
+     ====================================================== -->
+
+<div
+  id="modalArca"
+  class="hidden fixed inset-0 z-50 modal-bg flex items-center justify-center p-4">
+
+  <div class="bg-white rounded-2xl shadow-2xl w-full arca-modal-card">
+
+    <!-- ENCABEZADO -->
+
+    <div class="flex justify-between items-center p-6 border-b">
+
+      <div>
+
+        <h2 class="text-2xl font-bold">
+          Facturación ARCA
+        </h2>
+
+        <p class="text-gray-500 text-sm mt-1">
+          Facturación acumulada de los últimos 12 meses
+        </p>
+
+      </div>
+
+
+      <button
+        type="button"
+        onclick="cerrarModalArca()"
+        class="text-gray-500 hover:text-black text-2xl">
+
+        ×
+
+      </button>
+
+    </div>
+
+
+    <!-- CONTENIDO -->
+
+    <div class="p-6 space-y-5">
+
+
+      <!-- RESUMEN -->
+
+      <div class="arca-resumen-box">
+
+        <div class="flex justify-between items-center mb-3">
+
+  <div>
+    <span class="text-sm font-semibold text-gray-600">
+      Categoría actual
+    </span>
+
+    <div
+      id="arcaCategoriaModal"
+      class="text-lg font-extrabold mt-1">
+      D
+    </div>
+  </div>
+
+  <div class="flex items-center gap-2">
+
+    <select
+  id="arcaCategoriaSelect"
+  class="border border-gray-300 rounded-lg px-3 py-2 text-sm font-semibold bg-white">
+
+  <option value="A">A — $12.009.410</option>
+  <option value="B">B — $17.595.183</option>
+  <option value="C">C — $24.670.494</option>
+  <option value="D">D — $30.628.651</option>
+  <option value="E">E — $36.028.231</option>
+  <option value="F">F — $45.151.659</option>
+  <option value="G">G — $53.995.799</option>
+  <option value="H">H — $81.924.661</option>
+  <option value="I">I — $91.699.762</option>
+  <option value="J">J — $105.012.519</option>
+  <option value="K">K — $126.610.839</option>
+
+</select>
+
+    <button
+      type="button"
+      onclick="guardarCategoriaArca()"
+      class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-semibold">
+
+      Guardar
+
+    </button>
+
+  </div>
+
+</div>
+
+
+        <!-- BARRA -->
+
+        <div class="arca-modal-barra">
+
+          <div
+            id="arcaModalBarraProgreso"
+            class="arca-modal-progreso">
+          </div>
+
+        </div>
+
+
+        <div class="flex justify-between items-center mt-2">
+
+          <span
+            id="arcaPorcentajeModal"
+            class="text-sm font-bold">
+
+            0%
+
+          </span>
+
+
+          <span
+            id="arcaEstadoModal"
+            class="text-sm font-semibold text-gray-500">
+
+            Calculando...
+
+          </span>
+
+        </div>
+
+      </div>
+
+
+      <!-- DATOS -->
+
+      <div>
+
+
+        <div class="arca-dato">
+
+          <span class="text-gray-500">
+            Facturado
+          </span>
+
+          <strong id="arcaFacturadoModal">
+            $0
+          </strong>
+
+        </div>
+
+        <div class="arca-dato">
+
+  <span class="text-gray-500">
+    Histórico ARCA
+  </span>
+
+  <strong id="arcaHistoricoModal">
+    $0
+  </strong>
+
+</div>
+
+
+<div class="arca-dato">
+
+  <span class="text-gray-500">
+    Facturado con la app
+  </span>
+
+  <strong id="arcaAppModal">
+    $0
+  </strong>
+
+</div>
+
+
+        <div class="arca-dato">
+
+          <span class="text-gray-500">
+            Tope categoría
+          </span>
+
+          <strong id="arcaTopeModal">
+            $0
+          </strong>
+
+        </div>
+
+
+        <div class="arca-dato">
+
+  <span
+    id="arcaDiferenciaLabel"
+    class="text-gray-500">
+    Disponible
+  </span>
+
+  <strong id="arcaDiferenciaModal">
+    $0
+  </strong>
+
+</div>
+
+
+        <div class="arca-dato">
+
+          <span class="text-gray-500">
+            Comprobantes
+          </span>
+
+          <strong id="arcaComprobantesModal">
+            0
+          </strong>
+
+        </div>
+
+
+        <div class="arca-dato">
+
+          <span class="text-gray-500">
+            Período
+          </span>
+
+          <strong id="arcaPeriodoModal">
+            -
+          </strong>
+
+        </div>
+
+
+      </div>
+
+
+      <!-- ALERTA -->
+
+      <div
+        id="arcaAlertaModal"
+        class="hidden rounded-xl p-4 bg-red-50 text-red-700 font-semibold">
+      </div>
+
+
+      <p class="text-xs text-gray-400">
+  Incluye el histórico de facturación cargado en ARCA
+  y las facturas emitidas desde ZettaPrint durante los últimos 12 meses.
+</p>
+
+
+    </div>
+
+  </div>
+
+</div>
 
 <!-- ====================================================== -->
 <!-- MODAL REGLA 50 / 30 / 20 -->
@@ -2994,6 +3410,719 @@ function toggleSeccion(contenidoId, flechaId) {
 }
 
 // ======================================================
+// FACTURACIÓN ARCA
+// ======================================================
+
+let resumenArca = null;
+
+
+function formatoFechaArca(fecha) {
+
+  if (!fecha) return "-";
+
+  const partes =
+    String(fecha)
+      .substring(0, 10)
+      .split("-");
+
+  if (partes.length !== 3) {
+    return String(fecha);
+  }
+
+  return `${partes[2]}/${partes[1]}/${partes[0]}`;
+}
+
+
+
+function actualizarIndicadorArca(data) {
+
+  resumenArca = data;
+
+  const categoriaIndicador =
+  document.getElementById("arcaCategoriaIndicador");
+
+if (categoriaIndicador) {
+  categoriaIndicador.textContent =
+    data.categoria || "D";
+}
+
+  const porcentajeReal =
+    Number(data.porcentaje) || 0;
+
+  const porcentajeBarra =
+    Math.min(porcentajeReal, 100);
+
+
+  const porcentajeTexto =
+    porcentajeReal.toLocaleString("es-AR", {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1
+    });
+
+
+  const boton =
+    document.getElementById(
+      "btnIndicadorArca"
+    );
+
+  const barra =
+    document.getElementById(
+      "arcaBarraProgreso"
+    );
+
+
+  if (!boton || !barra) {
+    return;
+  }
+
+
+  barra.style.width =
+    `${porcentajeBarra}%`;
+
+
+  document.getElementById(
+    "arcaPorcentaje"
+  ).textContent =
+    `${porcentajeTexto}%`;
+
+
+  document.getElementById(
+    "arcaMontoFacturado"
+  ).textContent =
+    formatoMoneda(data.facturado);
+
+
+  document.getElementById(
+    "arcaTope"
+  ).textContent =
+    formatoMoneda(data.tope);
+
+
+  boton.classList.remove(
+    "arca-alerta",
+    "arca-peligro",
+    "arca-excedido"
+  );
+
+
+  if (porcentajeReal >= 100) {
+
+    boton.classList.add(
+      "arca-excedido"
+    );
+
+  } else if (porcentajeReal >= 90) {
+
+    boton.classList.add(
+      "arca-peligro"
+    );
+
+  } else if (porcentajeReal >= 70) {
+
+    boton.classList.add(
+      "arca-alerta"
+    );
+
+  }
+
+}
+
+async function guardarCategoriaArca() {
+
+  const select =
+    document.getElementById("arcaCategoriaSelect");
+
+  if (!select) {
+    return;
+  }
+
+  const categoriaNueva = select.value;
+
+  const categoriaActual =
+    resumenArca?.categoria || "D";
+
+  // Si no cambió la categoría, no hacemos nada
+  if (categoriaNueva === categoriaActual) {
+    alert(`La categoría ya es ${categoriaActual}.`);
+    return;
+  }
+
+  const confirmar = confirm(
+    `¿Confirmás cambiar la categoría ARCA de ${categoriaActual} a ${categoriaNueva}?\n\n` +
+    `La aplicación comenzará a utilizar el nuevo tope de la categoría ${categoriaNueva}.`
+  );
+
+  if (!confirmar) {
+
+    // Volvemos a dejar seleccionada la categoría actual
+    select.value = categoriaActual;
+
+    return;
+  }
+
+  try {
+
+    const respuesta = await fetch(
+      "/arca-categoria",
+      {
+        method: "PUT",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          categoria: categoriaNueva
+        })
+      }
+    );
+
+    const data =
+      await respuesta.json();
+
+    if (!respuesta.ok || !data.ok) {
+
+      throw new Error(
+        data.error ||
+        "No se pudo actualizar la categoría ARCA"
+      );
+
+    }
+
+    // Limpiamos el resumen anterior
+    resumenArca = null;
+
+    // Volvemos a consultar ARCA
+    await cargarResumenArca();
+
+    // Actualizamos el modal
+    renderizarModalArca();
+
+    alert(
+      `Categoría ARCA actualizada a ${data.categoria}`
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Error actualizando categoría ARCA:",
+      error
+    );
+
+    // Si hubo error, volvemos a la categoría anterior
+    select.value = categoriaActual;
+
+    alert(
+      "No se pudo actualizar la categoría ARCA."
+    );
+
+  }
+
+}
+
+async function cargarResumenArca() {
+
+  try {
+
+    const respuesta =
+      await fetch("/arca-resumen");
+
+
+    const data =
+      await respuesta.json();
+
+
+    if (!respuesta.ok || !data.ok) {
+
+      throw new Error(
+        data.error ||
+        "Error al obtener información de ARCA"
+      );
+
+    }
+
+
+    actualizarIndicadorArca(data);
+
+
+  } catch (error) {
+
+    console.error(
+      "Error ARCA:",
+      error
+    );
+
+
+    const porcentaje =
+      document.getElementById(
+        "arcaPorcentaje"
+      );
+
+
+    if (porcentaje) {
+
+      porcentaje.textContent =
+        "Error";
+
+    }
+
+  }
+
+}
+
+// ======================================================
+// MODAL DE FACTURACIÓN ARCA
+// ======================================================
+
+function abrirModalArca() {
+
+  const modal =
+    document.getElementById("modalArca");
+
+  if (!modal) return;
+
+  modal.classList.remove("hidden");
+
+  if (!resumenArca) {
+
+    cargarResumenArca();
+
+  } else {
+
+    renderizarModalArca();
+
+  }
+
+}
+
+
+function cerrarModalArca() {
+
+  const modal =
+    document.getElementById("modalArca");
+
+  if (!modal) return;
+
+  modal.classList.add("hidden");
+
+}
+
+
+function renderizarModalArca() {
+
+  if (!resumenArca) return;
+
+
+  const data = resumenArca;
+
+
+  const porcentajeReal =
+    Number(data.porcentaje) || 0;
+
+
+  const porcentajeBarra =
+    Math.min(porcentajeReal, 100);
+
+
+  const porcentajeTexto =
+    porcentajeReal.toLocaleString("es-AR", {
+
+      minimumFractionDigits: 1,
+
+      maximumFractionDigits: 1
+
+    });
+
+
+  // ------------------------------------------
+  // CATEGORÍA
+  // ------------------------------------------
+
+  const categoria =
+    document.getElementById(
+      "arcaCategoriaModal"
+    );
+
+  if (categoria) {
+
+    categoria.textContent =
+      data.categoria || "-";
+
+  }
+
+    const selectorCategoria =
+    document.getElementById(
+      "arcaCategoriaSelect"
+    );
+
+  if (selectorCategoria) {
+    selectorCategoria.value =
+      data.categoria || "D";
+  }
+
+
+  // ------------------------------------------
+  // BARRA
+  // ------------------------------------------
+
+  const barra =
+    document.getElementById(
+      "arcaModalBarraProgreso"
+    );
+
+  if (barra) {
+
+    barra.style.width =
+      `${porcentajeBarra}%`;
+
+
+    if (porcentajeReal >= 100) {
+
+      barra.style.background =
+        "#dc2626";
+
+    } else if (porcentajeReal >= 90) {
+
+      barra.style.background =
+        "#ef4444";
+
+    } else if (porcentajeReal >= 70) {
+
+      barra.style.background =
+        "#f59e0b";
+
+    } else {
+
+      barra.style.background =
+        "#22c55e";
+
+    }
+
+  }
+
+
+  // ------------------------------------------
+  // PORCENTAJE
+  // ------------------------------------------
+
+  const porcentaje =
+    document.getElementById(
+      "arcaPorcentajeModal"
+    );
+
+  if (porcentaje) {
+
+    porcentaje.textContent =
+      `${porcentajeTexto}%`;
+
+  }
+
+
+  // ------------------------------------------
+  // FACTURADO
+  // ------------------------------------------
+
+  const facturado =
+    document.getElementById(
+      "arcaFacturadoModal"
+    );
+
+  if (facturado) {
+
+    facturado.textContent =
+      formatoMoneda(
+        data.facturado
+      );
+
+  }
+
+  // ------------------------------------------
+// HISTÓRICO ARCA
+// ------------------------------------------
+
+const historico =
+  document.getElementById(
+    "arcaHistoricoModal"
+  );
+
+if (historico) {
+
+  historico.textContent =
+    formatoMoneda(
+      data.facturado_historico
+    );
+
+}
+
+
+// ------------------------------------------
+// FACTURADO CON LA APP
+// ------------------------------------------
+
+const facturadoApp =
+  document.getElementById(
+    "arcaAppModal"
+  );
+
+if (facturadoApp) {
+
+  facturadoApp.textContent =
+    formatoMoneda(
+      data.facturado_app
+    );
+
+}
+
+
+  // ------------------------------------------
+  // TOPE
+  // ------------------------------------------
+
+  const tope =
+    document.getElementById(
+      "arcaTopeModal"
+    );
+
+  if (tope) {
+
+    tope.textContent =
+      formatoMoneda(
+        data.tope
+      );
+
+  }
+
+
+  // ------------------------------------------
+// DISPONIBLE / EXCEDENTE
+// ------------------------------------------
+
+const diferencia =
+  document.getElementById(
+    "arcaDiferenciaModal"
+  );
+
+const diferenciaLabel =
+  document.getElementById(
+    "arcaDiferenciaLabel"
+  );
+
+
+if (diferencia) {
+
+  if (porcentajeReal >= 100) {
+
+    // Superó el tope
+    diferencia.textContent =
+      formatoMoneda(
+        data.excedente
+      );
+
+    diferencia.className =
+      "text-red-600 font-bold";
+
+
+    if (diferenciaLabel) {
+
+      diferenciaLabel.textContent =
+        "Excedente";
+
+    }
+
+  } else {
+
+    // Todavía tiene margen
+    diferencia.textContent =
+      formatoMoneda(
+        data.disponible
+      );
+
+    diferencia.className =
+      "text-green-600 font-bold";
+
+
+    if (diferenciaLabel) {
+
+      diferenciaLabel.textContent =
+        "Disponible";
+
+    }
+
+  }
+
+}
+
+
+  // ------------------------------------------
+  // COMPROBANTES
+  // ------------------------------------------
+
+  const comprobantes =
+    document.getElementById(
+      "arcaComprobantesModal"
+    );
+
+  if (comprobantes) {
+
+    comprobantes.textContent =
+      data.comprobantes || 0;
+
+  }
+
+
+  // ------------------------------------------
+  // PERÍODO
+  // ------------------------------------------
+
+  const periodo =
+    document.getElementById(
+      "arcaPeriodoModal"
+    );
+
+
+  if (periodo) {
+
+    const fechaFinal =
+      data.ultima_factura
+        ? new Date(
+            String(data.ultima_factura)
+              .substring(0, 10) + "T00:00:00"
+          )
+        : new Date();
+
+
+    const fechaInicial =
+      new Date(fechaFinal);
+
+
+    fechaInicial.setFullYear(
+      fechaInicial.getFullYear() - 1
+    );
+
+
+    periodo.textContent =
+      `${formatoFechaArca(
+        fechaInicial.toISOString()
+      )} → ${formatoFechaArca(
+        fechaFinal.toISOString()
+      )}`;
+
+  }
+
+
+  // ------------------------------------------
+  // ESTADO
+  // ------------------------------------------
+
+  const estado =
+    document.getElementById(
+      "arcaEstadoModal"
+    );
+
+
+  const alerta =
+    document.getElementById(
+      "arcaAlertaModal"
+    );
+
+
+  if (porcentajeReal >= 100) {
+
+    if (estado) {
+
+      estado.textContent =
+        "TOPE SUPERADO";
+
+      estado.className =
+        "text-sm font-bold text-red-600";
+
+    }
+
+
+    if (alerta) {
+
+      alerta.classList.remove(
+        "hidden"
+      );
+
+      alerta.innerHTML =
+  `⚠️ Superaste el tope de la categoría ${data.categoria}.<br>
+   <strong>Excedente: ${formatoMoneda(data.excedente)}.</strong>`;
+        
+
+    }
+
+
+  } else if (porcentajeReal >= 90) {
+
+    if (estado) {
+
+      estado.textContent =
+        "Muy cerca del tope";
+
+      estado.className =
+        "text-sm font-bold text-orange-600";
+
+    }
+
+
+    if (alerta) {
+
+      alerta.classList.add(
+        "hidden"
+      );
+
+    }
+
+
+  } else if (porcentajeReal >= 70) {
+
+    if (estado) {
+
+      estado.textContent =
+        "Atención";
+
+      estado.className =
+        "text-sm font-bold text-amber-600";
+
+    }
+
+
+    if (alerta) {
+
+      alerta.classList.add(
+        "hidden"
+      );
+
+    }
+
+
+  } else {
+
+    if (estado) {
+
+      estado.textContent =
+        "Dentro del límite";
+
+      estado.className =
+        "text-sm font-bold text-green-600";
+
+    }
+
+
+    if (alerta) {
+
+      alerta.classList.add(
+        "hidden"
+      );
+
+    }
+
+  }
+
+}
+
+// ======================================================
 // REGLA 50 / 30 / 20
 // ======================================================
 
@@ -3514,6 +4643,8 @@ document.addEventListener(
     cargarCategorias();
 
     cargarMovimientos();
+
+    cargarResumenArca();
 
   }
 );
